@@ -216,8 +216,14 @@
             return false;
         }
         each(cb) {
-            for (let i in this._vector) {
-                cb(this._vector[i], i);
+            if (this._primary.use) {
+                this._vector.PreOT(function (item) {
+                    cb(item, item.key());
+                });
+            } else {
+                for (let i in this._vector) {
+                    cb(this._vector[i], i);
+                }
             }
         }
         length() {
