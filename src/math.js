@@ -1,298 +1,294 @@
+'bpo enable';
+
 !function () {
-    class BinaryTreeNode {
-        constructor(key, value, cmp) {
-            this._key = key;
-            this._value = value;
-            this._cmp = cmp;
-            this._l = null;
-            this._r = null;
-        }
-        key() {
-            return this._key;
-        }
-        value(v) {
-            if (v === undefined) {
-                return this._value;
-            }
-            this._value = v;
-            return this;
-        }
-        left(l) {
-            if (l === undefined) {
-                return this._l;
-            }
-            this._l = l;
-            return this;
-        }
-        right(r) {
-            if (r === undefined) {
-                return this._r;
-            }
-            this._r = r;
-            return this;
-        }
-        insert(node) {
-            if (node.key() < this.key()) {// 说明要放到左边
-                if (this.left()) {
-                    this.left().insert(node);
-                } else {
-                    this.left(node);
-                }
-            } else {
-                if (this.right()) {// 说明要放到右边
-                    this.right().insert(node);
-                } else {
-                    this.right(node);
-                }
-            }
-        }
-        find(key) {
-            // console.log(key);
-            if (key == this.key()) return this;
-            if (this.left() && key == this.left().key()) return this.left();
-            if (this.right() && key == this.right().key()) return this.right();
-            // console.log(key, this._l.key());
-            if (this._l &&
-                this._cmp(
-                    this._l.key(),
-                    key
-                )) {// 如果左子树不为空并且这个key小于左节点的key,那么就在左子树中寻找
-                return this._l.find(key);
-            }
-            // console.log(key, this._r.key());
-            if (this._r &&
-                this._cmp(
-                    key,
-                    this._r.key()
-                )) {// 如果右子树不为空并且这个key小于右节点的key,那么就在右子树中寻找
-                return this._r.find(key);
-            }
-            return null;
-        }
-        del() {
-            delete this._l;
-            delete this._r;
-            delete this._key;
-            delete this._value;
-            delete this._cmp;
-        }
-        // 先根遍历
-        PreOT(cb) {
-            cb(this);
-            if (this._l) this._l.PreOT(cb);
-            if (this._r) this._r.PreOT(cb);
-        }
-        // 中根遍历
-        InOT(cb) {
-            if (this._l) this._l.InOT(cb);
-            cb(this);
-            if (this._r) this._r.InOT(cb);
-        }
-        // 后根遍历
-        PostOT(cb) {
-            if (this._l) this._l.PostOT(cb);
-            if (this._r) this._r.PostOT(cb);
-            cb(this);
-        }
+    let lib = new See3D.Library("Math3D");// 生成一个新的See3D库
+
+    // 支持的最小精度
+    const smallest = 1e-5;
+    
+    function probably(n) {
+        let v = Number(n.toFixed(5));
+        if (v + smallest >= n) return v;
+        return n;
     }
-    class BinaryTree {
-        constructor(cmp) {
-            this._root = null;
-            this._cmp = cmp;
-        }
-        insert(key, value) {
-            if (this._root) {
-                this._root.insert(
-                    new BinaryTreeNode(key, value, this._cmp)
-                );
-            } else {
-                this._root = new BinaryTreeNode(key, value, this._cmp);
+
+    // 枚举类型
+    class Enum extends See3D.LibraryDefineObject {
+        constructor(enums) {
+            super("Enum");
+            let n = 0;
+            for (let i in enums) {
+                let v = enums[i];
+                if (typeof v === "object") {
+                    n = v[1];
+                    v = v[0];
+                }
+                this[v] = n;
+                this["$" + n] = v;
+                n++;
             }
         }
-        find(key) {
-            if (this._root) {
-                return this._root.find(key);
-            }
-            return null;
-        }
-        del(key) {
-            if (!this._root) return this;
-            let node = this.find(key);
-            if (node) node.del();
-        }
-        // 先根遍历
-        PreOT(cb) {
-            if (this._root) {
-                this._root.PreOT(cb);
-            }
-        }
-        // 中根遍历
-        InOT(cb) {
-            if (this._root) {
-                this._root.InOT(cb);
-            }
-        }
-        // 后根遍历
-        PostOT(cb) {
-            if (this._root) {
-                this._root.PostOT(cb);
-            }
+        get(n) {
+            return this["$" + n];
         }
     }
 
-    class Vector {
-        constructor() {
-            this._vector = [];
-            this._primary = {
-                key: null,
-                cmp: function (a, b) {
-                    return a > b;
-                },
-                use: false
-            };
-            for (let i in arguments) {
-                this._vector.push(arguments[i]);
-            }
+    // 向量类
+    class Vector extends See3D.LibraryDefineObject {
+        constructor(arr) {
+            super("Vector");
+            this.array = [];
+            for (let i of arr) this.array.push(i);
         }
-        offPrimary() {
-            this._primary.use = false;
+        set(index, val) {
+            this.array[index] = val;
             return this;
         }
-        primary(key, cmp) {
-            this._primary.key = key;
-            if (cmp !== undefined) this._primary.cmp = cmp;
-            let values = [];
-            if (this._primary.use) {
-                this._vector.PreOT(function (th) {
-                    values.push(th.value());
-                });
-            } else {
-                values = this._vector;
-            }
-            // console.log(values);
-            this._primary.use = true;
-            this._vector = new See3D.BinaryTree(cmp);
-            for (let i in values) {
-                this._vector.insert(values[i][key], values[i]);
-            }
-            return this;
+        get(index) {
+            return this.array[index];
         }
-        push(v) {
-            this._vector.push(v);
-            return this;
+        mod() {
+            let sum = 0;
+            for (let i of this.array) {
+                sum += i ** 2;
+            }
+            return Math.sqrt(sum);
         }
-        set(i, v) {
-            if (this._primary.use) {
-                let node = this._vector.find(i);
-                if (node) {
-                    node.value(v);
+        get length() {
+            return this.array.length;
+        }
+        // 点积
+        operatorMod(b) {
+            if (typeof b === "number") {
+                console.error(new Error("Error 102: Do not support scalar and vector for dot product operations"));
+                return null;
+            }
+            if (b.type === "Vector") {
+                if (b.length != this.length) {
+                    console.error(new Error("Error 100: Vector size does not match"));
+                    return null;
                 }
-            } else {
-                this._vector[i] = v;
-            }
-            return this;
-        }
-        get(i) {
-            if (this._primary.use) {
-                let node = this._vector.find(i);
-                return node ? node.value() : null;
-            } else {
-                return this._vector[i];
+                let sum = 0;
+                for (let i in this.array) {
+                    sum += this.array[i] * b.array[i];
+                }
+                return sum;
             }
         }
-        find(cmp, cb) {
-            this.each(function (item, index) {
-                if (cmp(item)) {
-                    cb(item, index);
+        operatorAdd(b) {
+            if (typeof b === "number") {
+                let tmp = new Vector([]);
+                tmp.array = tmp.array.concat(this.array);
+                for (let i in this.array) {
+                    tmp.array[i] += b;
                 }
-            });
-        }
-        find_bool(cmp) {
-            this.each(function (item) {
-                if (cmp(item)) {
-                    return true;
-                }
-            });
-            return false;
-        }
-        each(cb) {
-            if (this._primary.use) {
-                this._vector.PreOT(function (item) {
-                    cb(item, item.key());
-                });
+                return tmp;
             } else {
-                for (let i in this._vector) {
-                    cb(this._vector[i], i);
+                if (b.type === "Vector") {
+                    if (b.length != this.length) {
+                        console.error(new Error("Error 100: Vector size does not match"));
+                        return null;
+                    }
+                    let v = [];
+                    for (let i in this.array) {
+                        v.push(this.array[i] + b.array[i]);
+                    }
+                    return new Vector(v);
                 }
             }
         }
-        length() {
-            return this._vector.length;
+        operatorSub(b) {
+            if (typeof b === "number") {
+                let tmp = new Vector([]);
+                tmp.array = tmp.array.concat(this.array);
+                for (let i in this.array) {
+                    tmp.array[i] -= b;
+                }
+                return tmp;
+            } else {
+                if (b.type === "Vector") {
+                    if (b.length != this.length) {
+                        console.error(new Error("Error 100: Vector size does not match"));
+                        return null;
+                    }
+                    let v = [];
+                    for (let i in this.array) {
+                        v.push(this.array[i] - b.array[i]);
+                    }
+                    return new Vector(v);
+                }
+            }
+        }
+        operatorDiv(b) {
+            if (typeof b === "number") {
+                let tmp = new Vector([]);
+                tmp.array = tmp.array.concat(this.array);
+                for (let i in this.array) {
+                    tmp.array[i] /= b;
+                }
+                return tmp;
+            } else {
+                console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
+                return null;
+            }
+        }
+        operatorMul(b) {
+            if (typeof b === "number") {
+                let tmp = new Vector([]);
+                tmp.array = tmp.array.concat(this.array);
+                for (let i in this.array) {
+                    tmp.array[i] *= b;
+                }
+                return tmp;
+            } else {
+                console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
+                return null;
+            }
+        }
+        operatorBinaryXor(b) {
+            if (typeof b === "number") {
+                console.error(new Error("Error 102: Do not support scalar and vector for dot product operations"));
+                return null;
+            }
+            if (b.type === "Vector") {
+                let res = this % b;
+                res /= this.mod();
+                res /= b.mod();
+                res = Math.acos(res);
+                return probably(res);
+            }
+        }
+        trans(type) {
+            if (type.search(/vector/i)) {
+                if (this.length == 2) return new Vector2(...this.array);
+                if (this.length == 3) return new Vector3(...this.array);
+                if (this.length == 4) return new Vector4(...this.array);
+                return new Vector(this.array);
+            }
+        }
+        norm() {
+            return this / this.mod();
         }
     }
     class Vector2 extends Vector {
-        constructor(x, y) {
-            super(x, y);
+        constructor(x = 0, y = 0) {
+            super([x, y]);
         }
-        push() {}
-        x(v) {
-            if (v === undefined) {
-                return this.get(0);
-            }
-            return this.set(0, v);
+        get x() {
+            return this.get(0);
         }
-        y(v) {
-            if (v === undefined) {
-                return this.get(1);
-            }
-            return this.set(1, v);
+        set x(n) {
+            this.set(0, n);
+            return n;
+        }
+        get y() {
+            return this.get(1);
+        }
+        set y(n) {
+            this.set(1, n);
+            return n;
         }
     }
     class Vector3 extends Vector {
-        constructor(x, y, z) {
-            super(x, y, z);
+        constructor(x = 0, y = 0, z = 0) {
+            super([x, y, z]);
         }
-        push() {}
-        x(v) {
-            if (v === undefined) {
-                return this.get(0);
-            }
-            return this.set(0, v);
+        get x() {
+            return this.get(0);
         }
-        y(v) {
-            if (v === undefined) {
-                return this.get(1);
-            }
-            return this.set(1, v);
+        set x(n) {
+            this.set(0, n);
+            return n;
         }
-        z(v) {
-            if (v === undefined) {
-                return this.get(2);
-            }
-            return this.set(2, v);
+        get y() {
+            return this.get(1);
         }
-        static Zero() {
-            return new Vector3(0, 0, 0);
+        set y(n) {
+            this.set(1, n);
+            return n;
+        }
+        get z() {
+            return this.get(2);
+        }
+        set z(n) {
+            this.set(2, n);
+            return n;
         }
     }
-    function dict(a, b) {
-        if (a.length > b.length) return 1;
-        if (a.length < b.length) return -1;
-        for (let i = 0 ; i < a.length ; i++) {
-            let tmp1 = a.charCodeAt(i);
-            let tmp2 = b.charCodeAt(i);
-            if (tmp1 < tmp2) {
-                return -1;
-            }
-            if (tmp1 > tmp2) {
-                return 1;
-            }
+    class Vector4 extends Vector {
+        constructor(x = 0, y = 0, z = 0, w = 1) {
+            super([x, y, z, w]);
         }
-        return 0;
+        get x() {
+            return this.get(0) / this.w;
+        }
+        set x(n) {
+            this.set(0, n);
+            return n;
+        }
+        get y() {
+            return this.get(1) / this.w;
+        }
+        set y(n) {
+            this.set(1, n);
+            return n;
+        }
+        get z() {
+            return this.get(2) / this.w;
+        }
+        set z(n) {
+            this.set(2, n);
+            return n;
+        }
+        get w() {
+            return this.get(3);
+        }
+        set w(n) {
+            this.set(3, n);
+            return n;
+        }
     }
-    See3D.BinaryTree = BinaryTree;
-    See3D.Vector = Vector;
-    See3D.Vector2 = Vector2;
-    See3D.Vector3 = Vector3;
-    See3D.dict = dict;
+
+    // 直线类
+    class StraightLine2D extends See3D.LibraryDefineObject {
+        constructor(x0, y0, x1, y1) {
+            super("StraightLine");
+            this.p0 = new Vector2(x0, y0);
+            this.p1 = new Vector2(x1, y1);
+            this.v = new Vector2(x1 - x0, y1 - y0);
+        }
+    }
+    class StraightLine3D extends See3D.LibraryDefineObject {
+        constructor(x0, y0, z0, x1, y1, z1) {
+            super("StraightLine");
+            this.p0 = new Vector3(x0, y0, z0);
+            this.p1 = new Vector3(x1, y1, z1);
+            this.v = new Vector3(x1 - x0, y1 - y0, z1 - z0);
+        }
+    }
+
+    // 在库中定义所有的接口
+    lib.define("smallest", smallest);
+    lib.define("probably", probably);
+
+    lib.define("Enum", Enum);
+
+    lib.define("Vector", Vector);
+    lib.define("Vector2", Vector2);
+    lib.define("Vector3", Vector3);
+    lib.define("Vector4", Vector4);
+
+    lib.define("StraightLine2D", StraightLine2D);
+    lib.define("StraightLine3D", StraightLine3D);
+
+    lib.trans();// 在库的全局添加接口
+    See3D.library(lib);// 将库加载入See3D中
+    See3D.load("Math3D");// 将库加入See3D的默认加载队列
+    lib.global();
+    let a = new Vector2(1, 1);
+    let b = new Vector2(1, 1);
+    console.log(a % b);
+    console.log(a ^ b);
+    console.log(a / 0.5);
+    console.log(a * 2);
 }();

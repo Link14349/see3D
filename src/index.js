@@ -1,81 +1,76 @@
-/*!
-
- * See3D 开源的3D渲染引擎
-
- * yhzheng - v0.0.1 (Fri, 28 Dec 2018 10:53:42 GMT)
-
- * https://github.com/qianduanXIAOHAOZI/see3D | Released under MIT license
-
- * Copyright (c) 2018 yhzheng
-
-*/
-
-"use strict";
-
-class See3D
-{
-    static VERSION() {
-        return "v0.0.1";
+class See3D {
+    constructor(dom = document.createElement("canvas")) {
+        this.__dom = dom;
+        this.__ctx = dom.getContext("2d");
+        this.loadGlobal();
     }
-    constructor(dom, width, height) {
-        this._dom = dom;
-        this._ctx = dom.getContext("2d");
-        this._width = dom.width;
-        this._height = dom.height;
-        this._scenes = new See3D.Vector();
-        if (width !== undefined) {
-            this._width = width;
-            dom.width = width;
-        }
-        if (height !== undefined) {
-            this._height = height;
-            dom.height = height;
+    loadGlobal() {
+        for (let i of See3D.__loads) {
+            this.load(i);
         }
     }
-    width(w) {
-        if (w === undefined) {
-            return this._width;
-        }
-        this._width = w;
-        this._dom.width = this._width;
-        return this;
+    load(name) {
+        this[name] = See3D.__libraries.get(name);
     }
-    height(h) {
-        if (h === undefined) {
-            return this._height;
-        }
-        this._height = h;
-        this._dom.height = this._height;
-        return this;
+    get dom() {
+        return this.__dom;
     }
-    size(w, h) {
-        if (w === undefined || h === undefined) return [this._width, this._height];
-        return this.width(w).height(h);
+    get ctx() {
+        return this.__ctx;
     }
-    full() {
-        this.size(window.innerWidth, window.innerHeight);
-        this._dom.style.width = "100%";
-        this._dom.style.height = "100%";
-        this._dom.style.display = "block";
-        let th = this;
-        window.onresize = function () {
-            th.size(window.innerWidth, window.innerHeight);
-        };
-        return this;
+    static library(entry) {
+        // entry
+        See3D.__libraries.set(entry.name, entry);
     }
-    rebind(d) {
-        if (d === undefined) return this._dom;
-        this._dom = d;
-        this._ctx = d.getContext("2d");
-        this._width = d.width;
-        this._height = d.height;
-        return this;
+    static load(name) {
+        See3D.__loads.push(name);
     }
-    ctx() {
-        return this._ctx;
-    }
-    push(scene) {
-        this._scenes.push(scene);
-        return this;
+    static loadGlobal(name) {
+        globalThis[name] = See3D.__libraries.get(name);
     }
 }
+
+!function () {
+    See3D.__libraries = new Map();
+    See3D.__loads = [];
+    class Library {
+        constructor(name) {
+            this.name = name;
+            this.defines = {};
+        }
+        define(name, val) {
+            this.defines[name] = val;
+            return this;
+        }
+        get(name) {
+            return this.defines[name];
+        }
+        trans() {
+            for (let i in this.defines) {
+                this["$" + i] = this.defines[i];
+            }
+        }
+        global() {
+            for (let i in this.defines) {
+                globalThis[i] = this.defines[i];
+            }
+        }
+    }
+    // 所有的See3D库类接口都必须继承自该类
+    class LibraryDefineObject {
+        constructor(type) {
+            this.type = type;
+        }
+    }
+    function checkType(obj, type) {
+        return obj.type == type;
+    }
+    function translate(type, obj) {
+        return obj.transType(type);
+    }
+    See3D.Library = Library;
+    See3D.LibraryDefineObject = LibraryDefineObject;
+    See3D.Console = LibraryDefineObject;
+    See3D.checkType = checkType;
+    See3D.translate = translate;
+}();
