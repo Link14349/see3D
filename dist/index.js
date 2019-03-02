@@ -11,17 +11,32 @@ var _Op = function () {
         add: function add(a, b) {
             if (a.operatorAdd) return a.operatorAdd(b);else return a + b;
         },
+        selfAdd: function selfAdd(a, b) {
+            if (a.operatorSelfAdd) return a.operatorSelfAdd(b);else return a += b;
+        },
         sub: function sub(a, b) {
             if (a.operatorSub) return a.operatorSub(b);else return a - b;
+        },
+        selfSub: function selfSub(a, b) {
+            if (a.operatorSelfSub) return a.operatorSelfSub(b);else return a -= b;
         },
         mul: function mul(a, b) {
             if (a.operatorMul) return a.operatorMul(b);else return a * b;
         },
+        selfMul: function selfMul(a, b) {
+            if (a.operatorSelfMul) return a.operatorSelfMul(b);else return a *= b;
+        },
         div: function div(a, b) {
             if (a.operatorDiv) return a.operatorDiv(b);else return a / b;
         },
+        selfDiv: function selfDiv(a, b) {
+            if (a.operatorSelfDiv) return a.operatorSelfDiv(b);else return a /= b;
+        },
         mod: function mod(a, b) {
             if (a.operatorMod) return a.operatorMod(b);else return a % b;
+        },
+        selfMod: function selfMod(a, b) {
+            if (a.operatorSelfMod) return a.operatorSelfMod(b);else return a %= b;
         },
         pow: function pow(a, b) {
             if (a.operatorPow) return a.operatorPow(b);else return Math.pow(a, b);
@@ -62,6 +77,28 @@ var _Op = function () {
     };
 }();
 
+/*!
+
+ * See3D 3D Rendering Engine Library
+
+ * yhzheng - v0.0.1 (Wed Feb 27 2019 22:22:36 GMT+0800)
+
+ * https://github.com/qianduanXIAOHAOZI/see3D/tree/master | Released under MIT license
+
+ */
+/**
+ * @file index.js
+ * @overview 提供整体接口
+ */
+
+// const DEBUG = true;
+
+/**
+ * @class See3D
+ * @constructor
+ * @desc See3D类是可以将一个canvas变为See3D画布的类，一切操作都依靠它 \n
+ * 也是所有See3D API的容器，相当于一个module
+ */
 var See3D = function () {
     function See3D() {
         var dom = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.createElement("canvas");
@@ -71,9 +108,41 @@ var See3D = function () {
         this.__dom = dom;
         this.__ctx = dom.getContext("2d");
         this.loadGlobal();
+        this.bindLibrary("IO");
+        this.bindLibrary("Math3D");
+        this.sout = new See3D.IO.$sostream(this);
     }
 
     _createClass(See3D, [{
+        key: "width",
+        value: function width(w) {
+            if (w === void 0) {
+                return this.__dom.width;
+            }
+            this.__dom.width = w;
+            return this;
+        }
+    }, {
+        key: "height",
+        value: function height(w) {
+            if (w === void 0) {
+                return this.__dom.height;
+            }
+            this.__dom.height = w;
+            return this;
+        }
+    }, {
+        key: "full",
+        value: function full() {
+            this.width(window.innerWidth).height(window.innerHeight);
+            return this;
+        }
+        /**
+         * @function loadGlobal
+         * @desc 将所有全局库加载入该See3D实例
+         */
+
+    }, {
         key: "loadGlobal",
         value: function loadGlobal() {
             var _iteratorNormalCompletion = true;
@@ -100,11 +169,29 @@ var See3D = function () {
                     }
                 }
             }
+
+            return this;
         }
+    }, {
+        key: "bindLibrary",
+        value: function bindLibrary(name) {
+            // 将该库的所有API加入该See3D实例
+            var lib = this[name];
+            for (var i in lib.defines) {
+                this[i] = lib.defines[i];
+            }
+        }
+        /**
+         * @function load
+         * @param {string} name
+         * @desc 加载指定库到See3D对象中
+         */
+
     }, {
         key: "load",
         value: function load(name) {
             this[name] = See3D.__libraries.get(name);
+            return this;
         }
     }, {
         key: "dom",
@@ -116,21 +203,45 @@ var See3D = function () {
         get: function get() {
             return this.__ctx;
         }
+        /**
+         * @function library
+         * @param {See3D.Library} entry
+         * @desc 添加See3D库
+         */
+
     }], [{
         key: "library",
         value: function library(entry) {
             // entry
             See3D.__libraries.set(entry.name, entry);
         }
+        /**
+         * @function load
+         * @param {String} name
+         * @desc 添加应默认自带的库
+         */
+
     }, {
         key: "load",
         value: function load(name) {
             See3D.__loads.push(name);
         }
+        /**
+         * @function loadGlobal
+         * @param {String} name
+         * @desc 将该库导入到全局环境
+         */
+
     }, {
         key: "loadGlobal",
         value: function loadGlobal(name) {
             globalThis[name] = See3D.__libraries.get(name);
+        }
+    }, {
+        key: "lib",
+        value: function lib(name) {
+            See3D[name] = See3D.__libraries.get(name);
+            return See3D.__libraries.get(name);
         }
     }]);
 
@@ -138,8 +249,25 @@ var See3D = function () {
 }();
 
 !function () {
+    See3D.version = "v0.0.1";
+    console.log("See3D engine (" + See3D.version + ") launched");
+    See3D.DEBUG = true;
+    /**
+     * @property
+     * @private
+     */
     See3D.__libraries = new Map();
+    /**
+     * @property
+     * @private
+     */
     See3D.__loads = [];
+
+    /**
+     * @class Library
+     * @constructor
+     * @desc Library类提供了制作See3D类的接口
+     */
 
     var Library = function () {
         function Library(name) {
@@ -158,6 +286,9 @@ var See3D = function () {
         }, {
             key: "get",
             value: function get(name) {
+                if (this.defines[name].private) {
+                    console.error(new Error("Error 201: It's a private value"));
+                }
                 return this.defines[name];
             }
         }, {
@@ -181,11 +312,22 @@ var See3D = function () {
     // 所有的See3D库类接口都必须继承自该类
 
 
-    var LibraryDefineObject = function LibraryDefineObject(type) {
-        _classCallCheck(this, LibraryDefineObject);
+    var LibraryDefineObject = function () {
+        function LibraryDefineObject(type) {
+            _classCallCheck(this, LibraryDefineObject);
 
-        this.type = type;
-    };
+            this.type = type;
+        }
+
+        _createClass(LibraryDefineObject, [{
+            key: "transType",
+            value: function transType() {
+                return null;
+            }
+        }]);
+
+        return LibraryDefineObject;
+    }();
 
     function checkType(obj, type) {
         return obj.type == type;
@@ -195,7 +337,6 @@ var See3D = function () {
     }
     See3D.Library = Library;
     See3D.LibraryDefineObject = LibraryDefineObject;
-    See3D.Console = LibraryDefineObject;
     See3D.checkType = checkType;
     See3D.translate = translate;
 }();

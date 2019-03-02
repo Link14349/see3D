@@ -20,17 +20,32 @@ var _Op = function () {
         add: function add(a, b) {
             if (a.operatorAdd) return a.operatorAdd(b);else return a + b;
         },
+        selfAdd: function selfAdd(a, b) {
+            if (a.operatorSelfAdd) return a.operatorSelfAdd(b);else return a += b;
+        },
         sub: function sub(a, b) {
             if (a.operatorSub) return a.operatorSub(b);else return a - b;
+        },
+        selfSub: function selfSub(a, b) {
+            if (a.operatorSelfSub) return a.operatorSelfSub(b);else return a -= b;
         },
         mul: function mul(a, b) {
             if (a.operatorMul) return a.operatorMul(b);else return a * b;
         },
+        selfMul: function selfMul(a, b) {
+            if (a.operatorSelfMul) return a.operatorSelfMul(b);else return a *= b;
+        },
         div: function div(a, b) {
             if (a.operatorDiv) return a.operatorDiv(b);else return a / b;
         },
+        selfDiv: function selfDiv(a, b) {
+            if (a.operatorSelfDiv) return a.operatorSelfDiv(b);else return a /= b;
+        },
         mod: function mod(a, b) {
             if (a.operatorMod) return a.operatorMod(b);else return a % b;
+        },
+        selfMod: function selfMod(a, b) {
+            if (a.operatorSelfMod) return a.operatorSelfMod(b);else return a %= b;
         },
         pow: function pow(a, b) {
             if (a.operatorPow) return a.operatorPow(b);else return Math.pow(a, b);
@@ -293,8 +308,17 @@ var _Op = function () {
                     }
                     return tmp;
                 } else {
-                    console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
-                    return null;
+                    // 叉乘
+                    // console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
+                    var a = new Matrix(this.length, 1, [this.array]);
+                    var arr = [];
+                    for (var _i3 = 0; _Op.less(_i3, b.length); _i3++) {
+                        arr.push([b.array[_i3]]);
+                    }
+                    b = new Matrix(1, b.length, arr);
+                    // console.log(a);
+                    // console.log(b);
+                    return _Op.mul(a, b);
                 }
             }
         }, {
@@ -326,6 +350,26 @@ var _Op = function () {
             key: "norm",
             value: function norm() {
                 return _Op.div(this, this.mod());
+            }
+        }, {
+            key: "proj",
+            value: function proj(u) {
+                // 投影
+                var v = this.norm();
+                var n = _Op.mul(v, _Op.mod(u, v));
+                return _Op.div(n, _Op.mul(v.mod(), v.mod()));
+            }
+        }, {
+            key: "operatorEqual",
+            value: function operatorEqual(b) {
+                if (_Op.notEqual(b.length, this.length)) {
+                    console.error(new Error("Error 100: Vector size does not match"));
+                    return null;
+                }
+                for (var i = 0; _Op.less(i, this.length); i++) {
+                    if (_Op.notEqual(b.array[i], this.array[i])) return false;
+                }
+                return true;
             }
         }, {
             key: "length",
@@ -366,6 +410,11 @@ var _Op = function () {
             set: function set(n) {
                 this.set(1, n);
                 return n;
+            }
+        }], [{
+            key: "Zero",
+            value: function Zero() {
+                return new Vector2();
             }
         }]);
 
@@ -412,6 +461,31 @@ var _Op = function () {
                 this.set(2, n);
                 return n;
             }
+        }], [{
+            key: "Zero",
+            value: function Zero() {
+                return new Vector3();
+            }
+            // operatorMul(b) {
+            //     console.log(b);
+            //     if (typeof b === "number") {
+            //         let tmp = new Vector([]);
+            //         tmp.array = tmp.array.concat(this.array);
+            //         for (let i in this.array) {
+            //             tmp.array[i] *= b;
+            //         }
+            //         return tmp;
+            //     } else {
+            //         // 叉乘
+            //         // let m = new Matrix(3, 3, [
+            //         //     [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)]
+            //         // ]);
+            //         let a = new Matrix(this.length, 1, [this.array]);
+            //         console.log(a);
+            //         return null;
+            //     }
+            // }
+
         }]);
 
         return Vector3;
@@ -467,43 +541,219 @@ var _Op = function () {
                 this.set(3, n);
                 return n;
             }
+        }], [{
+            key: "Zero",
+            value: function Zero() {
+                return new Vector4();
+            }
         }]);
 
         return Vector4;
     }(Vector);
 
+    // 矩阵类
+
+
+    var Matrix = function (_See3D$LibraryDefineO3) {
+        _inherits(Matrix, _See3D$LibraryDefineO3);
+
+        function Matrix(w, h) {
+            var fill = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : 0;
+
+            _classCallCheck(this, Matrix);
+
+            var _this6 = _possibleConstructorReturn(this, (Matrix.__proto__ || Object.getPrototypeOf(Matrix)).call(this, "Matrix"));
+
+            _this6.array = [];
+            _this6.__w = w;
+            _this6.__h = h;
+            for (var i = 0; _Op.less(i, h); i++) {
+                _this6.array.push([]);
+                for (var j = 0; _Op.less(j, w); j++) {
+                    if (typeof fill === "number") _this6.array[i].push(fill);else _this6.array[i].push(fill[i][j]);
+                }
+            }
+            return _this6;
+        }
+
+        _createClass(Matrix, [{
+            key: "T",
+            value: function T() {
+                var matrix = new Matrix(this.__h, this.__w);
+                for (var i = 0; _Op.less(i, this.__w); i++) {
+                    for (var j = 0; _Op.less(j, this.__h); j++) {
+                        matrix.array[i][j] = this.array[j][i];
+                    }
+                }
+                return matrix;
+            }
+        }, {
+            key: "size",
+            value: function size() {
+                return new Vector2(this.__w, this.__h);
+            }
+        }, {
+            key: "get",
+            value: function get(i, j) {
+                return this.array[i][j];
+            }
+        }, {
+            key: "set",
+            value: function set(i, j, v) {
+                this.array[i][j] = v;
+                return this;
+            }
+        }, {
+            key: "operatorAdd",
+            value: function operatorAdd(b) {
+                // console.log(this.size() == b.size());
+                if (_Op.notEqual(this.size(), b.size())) {
+                    console.error(new Error("Error 100: Matrix size does not match"));
+                    return null;
+                }
+                var c = new Matrix(this.w, this.h, this.array);
+                for (var i = 0; _Op.less(i, this.h); i++) {
+                    for (var j = 0; _Op.less(j, this.w); j++) {
+                        c.array[i][j] += b.array[i][j];
+                    }
+                }
+                return c;
+            }
+        }, {
+            key: "operatorSub",
+            value: function operatorSub(b) {
+                // console.log(this.size() == b.size());
+                if (_Op.notEqual(this.size(), b.size())) {
+                    console.error(new Error("Error 100: Matrix size does not match"));
+                    return null;
+                }
+                var c = new Matrix(this.w, this.h, this.array);
+                for (var i = 0; _Op.less(i, this.h); i++) {
+                    for (var j = 0; _Op.less(j, this.w); j++) {
+                        c.array[i][j] -= b.array[i][j];
+                    }
+                }
+                return c;
+            }
+        }, {
+            key: "operatorMul",
+            value: function operatorMul(b) {
+                // console.log(this.size() == b.size());
+                if (_Op.equal(typeof b === "undefined" ? "undefined" : _typeof(b), "object")) {
+                    if (_Op.notEqual(this.w, b.h)) {
+                        console.error(new Error("Error 100: Matrix size does not match"));
+                        return null;
+                    }
+                    var _n = this.w;
+                    var c = new Matrix(this.h, b.w, 0);
+                    for (var i = 0; _Op.less(i, this.h); i++) {
+                        for (var j = 0; _Op.less(j, b.w); j++) {
+                            var sum = 0;
+                            for (var k = 0; _Op.less(k, _n); k++) {
+                                sum += _Op.mul(this.array[i][k], b.array[k][j]);
+                            }
+                            c.array[i][j] = sum;
+                        }
+                    }
+                    return c;
+                } else {
+                    var _c = new Matrix(this.w, this.h, [].concat(this.array));
+                    for (var _i4 = 0; _Op.less(_i4, this.h); _i4++) {
+                        for (var _j = 0; _Op.less(_j, this.w); _j++) {
+                            _c.array[_i4][_j] *= b;
+                        }
+                    }
+                    return _c;
+                }
+            }
+        }, {
+            key: "w",
+            get: function get() {
+                return this.__w;
+            }
+        }, {
+            key: "h",
+            get: function get() {
+                return this.__h;
+            }
+        }], [{
+            key: "identity",
+            value: function identity(s) {
+                var matrix = new Matrix(s, s);
+                for (var i = 0; _Op.less(i, s); i++) {
+                    matrix.array[i][i] = 1;
+                }
+                return matrix;
+            }
+        }, {
+            key: "Zero",
+            value: function Zero(w, h) {
+                return new Matrix(w, h);
+            }
+        }]);
+
+        return Matrix;
+    }(See3D.LibraryDefineObject);
+
+    var Matrix2x2 = function (_Matrix) {
+        _inherits(Matrix2x2, _Matrix);
+
+        function Matrix2x2(fill) {
+            _classCallCheck(this, Matrix2x2);
+
+            return _possibleConstructorReturn(this, (Matrix2x2.__proto__ || Object.getPrototypeOf(Matrix2x2)).call(this, 2, 2, fill));
+        }
+
+        _createClass(Matrix2x2, [{
+            key: "inverse",
+            value: function inverse() {
+                var tmp = _Op.div(1, this.det());
+                var c = new Matrix2x2([[this.array[1][1], -this.array[0][1]], [-this.array[1][0], this.array[0][0]]]);
+                c = _Op.mul(c, tmp);
+                return c;
+            }
+        }, {
+            key: "det",
+            value: function det() {
+                return _Op.add(_Op.mul(this.array[0][0], this.array[1][1]), _Op.mul(this.array[0][1], this.array[1][0]));
+            }
+        }]);
+
+        return Matrix2x2;
+    }(Matrix);
+
     // 直线类
 
 
-    var StraightLine2D = function (_See3D$LibraryDefineO3) {
-        _inherits(StraightLine2D, _See3D$LibraryDefineO3);
+    var StraightLine2D = function (_See3D$LibraryDefineO4) {
+        _inherits(StraightLine2D, _See3D$LibraryDefineO4);
 
         function StraightLine2D(x0, y0, x1, y1) {
             _classCallCheck(this, StraightLine2D);
 
-            var _this6 = _possibleConstructorReturn(this, (StraightLine2D.__proto__ || Object.getPrototypeOf(StraightLine2D)).call(this, "StraightLine"));
+            var _this8 = _possibleConstructorReturn(this, (StraightLine2D.__proto__ || Object.getPrototypeOf(StraightLine2D)).call(this, "StraightLine"));
 
-            _this6.p0 = new Vector2(x0, y0);
-            _this6.p1 = new Vector2(x1, y1);
-            _this6.v = new Vector2(_Op.sub(x1, x0), _Op.sub(y1, y0));
-            return _this6;
+            _this8.p0 = new Vector2(x0, y0);
+            _this8.p1 = new Vector2(x1, y1);
+            _this8.v = new Vector2(_Op.sub(x1, x0), _Op.sub(y1, y0));
+            return _this8;
         }
 
         return StraightLine2D;
     }(See3D.LibraryDefineObject);
 
-    var StraightLine3D = function (_See3D$LibraryDefineO4) {
-        _inherits(StraightLine3D, _See3D$LibraryDefineO4);
+    var StraightLine3D = function (_See3D$LibraryDefineO5) {
+        _inherits(StraightLine3D, _See3D$LibraryDefineO5);
 
         function StraightLine3D(x0, y0, z0, x1, y1, z1) {
             _classCallCheck(this, StraightLine3D);
 
-            var _this7 = _possibleConstructorReturn(this, (StraightLine3D.__proto__ || Object.getPrototypeOf(StraightLine3D)).call(this, "StraightLine"));
+            var _this9 = _possibleConstructorReturn(this, (StraightLine3D.__proto__ || Object.getPrototypeOf(StraightLine3D)).call(this, "StraightLine"));
 
-            _this7.p0 = new Vector3(x0, y0, z0);
-            _this7.p1 = new Vector3(x1, y1, z1);
-            _this7.v = new Vector3(_Op.sub(x1, x0), _Op.sub(y1, y0), _Op.sub(z1, z0));
-            return _this7;
+            _this9.p0 = new Vector3(x0, y0, z0);
+            _this9.p1 = new Vector3(x1, y1, z1);
+            _this9.v = new Vector3(_Op.sub(x1, x0), _Op.sub(y1, y0), _Op.sub(z1, z0));
+            return _this9;
         }
 
         return StraightLine3D;
@@ -522,18 +772,17 @@ var _Op = function () {
     lib.define("Vector3", Vector3);
     lib.define("Vector4", Vector4);
 
+    lib.define("Matrix", Matrix);
+    lib.define("Matrix2x2", Matrix2x2);
+
     lib.define("StraightLine2D", StraightLine2D);
     lib.define("StraightLine3D", StraightLine3D);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中
     See3D.load("Math3D"); // 将库加入See3D的默认加载队列
-    lib.global();
-    var a = new Vector2(1, 1);
-    var b = new Vector2(1, 1);
-    console.log(_Op.mod(a, b));
-    console.log(_Op.binaryXor(a, b));
-    console.log(_Op.div(a, 0.5));
-    console.log(_Op.mul(a, 2));
+    if (See3D.DEBUG) See3D.loadGlobal("Math3D");
+    if (See3D.DEBUG) lib.global();
+    See3D.lib("Math3D");
 }();
 //# sourceMappingURL=math.js.map
