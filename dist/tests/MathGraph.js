@@ -74,16 +74,10 @@ var _Op = function () {
   };
 }();
 
-console.log("===========IO Test===========");
+console.log("=======Math Graph Test=======");
 
-game.sout.size(30);
-_Op.binaryLShift(_Op.binaryLShift(game.sout, "Hello world!\n"), "I love 3D!\n");
-game.sout.size(50);
-_Op.binaryLShift(game.sout, "Created by See3D");
-// game.sout.size(20);
-// game.sout << "v-0.0.1";
-game.sout.size(50);
-_Op.binaryLShift(game.sout, "123\n");
+var parmline2d = new Parmline2D(new Vector2(0, 0), new Vector2(1, 1));
+console.log(parmline2d);
 
-console.log("=========IO Test End=========");
-//# sourceMappingURL=IO.js.map
+console.log("=====Math Graph Test End=====");
+//# sourceMappingURL=MathGraph.js.map

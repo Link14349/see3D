@@ -33,24 +33,22 @@
             this.startY = 0;
             this.update();
         }
-        get size() {
-            return this.__size;
-        }
-        set size(n) {
+        size(n) {
+            if (n === undefined) return this.__size;
+            if (this.__size > n)
+                this.y += this.__size - n;
             this.__size = n;
             this.update();
-            return this.__size;
+            return this;
         }
-        get font() {
-            return this.__font;
-        }
-        set font(f) {
+        font(f) {
+            if (f === undefined) return this.__font;
             this.__font = f;
             this.update();
             return this.__font;
         }
         update() {
-            this.__ctx.font = `${this.size}px ${this.font}`;
+            this.__ctx.font = `${this.size()}px ${this.font()}`;
         }
         reset() {
             this.x = this.startX;
@@ -62,15 +60,15 @@
             this.__ctx.textAlign = "left";
             this.__ctx.textBaseline = "top";
             this.__ctx.fillStyle = this.__color;
-            // console.log(this.size, this.__ctx);
+            // console.log(this.size(), this.__ctx);
             let words = b.split("\n");
             for (let i = 0; i < words.length; i++) {
                 this.__ctx.fillText(words[i], this.x, this.y);
                 if (i == words.length - 1)
-                    this.x += this.size * b.length / 2 + 1;
+                    this.x += this.__ctx.measureText(words[i]).x;
                 else {
                     this.x = this.startX;
-                    this.y += this.size;
+                    this.y += this.__ctx.measureText(words[i]).y;
                 }
             }
             return this;

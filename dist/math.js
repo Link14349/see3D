@@ -723,40 +723,42 @@ var _Op = function () {
     }(Matrix);
 
     // 直线类
+    // 表示方法: 参数化直线
+    // 即: 起点, 终点, 方向
 
 
-    var StraightLine2D = function (_See3D$LibraryDefineO4) {
-        _inherits(StraightLine2D, _See3D$LibraryDefineO4);
+    var Parmline2D = function (_See3D$LibraryDefineO4) {
+        _inherits(Parmline2D, _See3D$LibraryDefineO4);
 
-        function StraightLine2D(x0, y0, x1, y1) {
-            _classCallCheck(this, StraightLine2D);
+        function Parmline2D(v0, v1) {
+            _classCallCheck(this, Parmline2D);
 
-            var _this8 = _possibleConstructorReturn(this, (StraightLine2D.__proto__ || Object.getPrototypeOf(StraightLine2D)).call(this, "StraightLine"));
+            var _this8 = _possibleConstructorReturn(this, (Parmline2D.__proto__ || Object.getPrototypeOf(Parmline2D)).call(this, "Parmline"));
 
-            _this8.p0 = new Vector2(x0, y0);
-            _this8.p1 = new Vector2(x1, y1);
-            _this8.v = new Vector2(_Op.sub(x1, x0), _Op.sub(y1, y0));
+            _this8.p0 = v0;
+            _this8.p1 = v1;
+            _this8.v = _Op.sub(v1, v0);
             return _this8;
         }
 
-        return StraightLine2D;
+        return Parmline2D;
     }(See3D.LibraryDefineObject);
 
-    var StraightLine3D = function (_See3D$LibraryDefineO5) {
-        _inherits(StraightLine3D, _See3D$LibraryDefineO5);
+    var Parmline3D = function (_See3D$LibraryDefineO5) {
+        _inherits(Parmline3D, _See3D$LibraryDefineO5);
 
-        function StraightLine3D(x0, y0, z0, x1, y1, z1) {
-            _classCallCheck(this, StraightLine3D);
+        function Parmline3D(v0, v1) {
+            _classCallCheck(this, Parmline3D);
 
-            var _this9 = _possibleConstructorReturn(this, (StraightLine3D.__proto__ || Object.getPrototypeOf(StraightLine3D)).call(this, "StraightLine"));
+            var _this9 = _possibleConstructorReturn(this, (Parmline3D.__proto__ || Object.getPrototypeOf(Parmline3D)).call(this, "Parmline"));
 
-            _this9.p0 = new Vector3(x0, y0, z0);
-            _this9.p1 = new Vector3(x1, y1, z1);
-            _this9.v = new Vector3(_Op.sub(x1, x0), _Op.sub(y1, y0), _Op.sub(z1, z0));
+            _this9.p0 = v0;
+            _this9.p1 = v1;
+            _this9.v = _Op.sub(v1, v0);
             return _this9;
         }
 
-        return StraightLine3D;
+        return Parmline3D;
     }(See3D.LibraryDefineObject);
 
     // 在库中定义所有的接口
@@ -775,8 +777,8 @@ var _Op = function () {
     lib.define("Matrix", Matrix);
     lib.define("Matrix2x2", Matrix2x2);
 
-    lib.define("StraightLine2D", StraightLine2D);
-    lib.define("StraightLine3D", StraightLine3D);
+    lib.define("Parmline2D", Parmline2D);
+    lib.define("Parmline3D", Parmline3D);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中

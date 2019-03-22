@@ -427,20 +427,22 @@
     }
 
     // 直线类
-    class StraightLine2D extends See3D.LibraryDefineObject {
-        constructor(x0, y0, x1, y1) {
-            super("StraightLine");
-            this.p0 = new Vector2(x0, y0);
-            this.p1 = new Vector2(x1, y1);
-            this.v = new Vector2(x1 - x0, y1 - y0);
+    // 表示方法: 参数化直线
+    // 即: 起点, 终点, 方向
+    class Parmline2D extends See3D.LibraryDefineObject {
+        constructor(v0, v1) {
+            super("Parmline");
+            this.p0 = v0;
+            this.p1 = v1;
+            this.v = v1 - v0;
         }
     }
-    class StraightLine3D extends See3D.LibraryDefineObject {
-        constructor(x0, y0, z0, x1, y1, z1) {
-            super("StraightLine");
-            this.p0 = new Vector3(x0, y0, z0);
-            this.p1 = new Vector3(x1, y1, z1);
-            this.v = new Vector3(x1 - x0, y1 - y0, z1 - z0);
+    class Parmline3D extends See3D.LibraryDefineObject {
+        constructor(v0, v1) {
+            super("Parmline");
+            this.p0 = v0;
+            this.p1 = v1;
+            this.v = v1 - v0;
         }
     }
 
@@ -458,8 +460,8 @@
     lib.define("Matrix", Matrix);
     lib.define("Matrix2x2", Matrix2x2);
 
-    lib.define("StraightLine2D", StraightLine2D);
-    lib.define("StraightLine3D", StraightLine3D);
+    lib.define("Parmline2D", Parmline2D);
+    lib.define("Parmline3D", Parmline3D);
 
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中

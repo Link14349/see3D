@@ -141,9 +141,26 @@ var _Op = function () {
         }
 
         _createClass(sostream, [{
+            key: "size",
+            value: function size(n) {
+                if (n === undefined) return this.__size;
+                if (_Op.greater(this.__size, n)) this.y += _Op.sub(this.__size, n);
+                this.__size = n;
+                this.update();
+                return this;
+            }
+        }, {
+            key: "font",
+            value: function font(f) {
+                if (f === undefined) return this.__font;
+                this.__font = f;
+                this.update();
+                return this.__font;
+            }
+        }, {
             key: "update",
             value: function update() {
-                this.__ctx.font = _Op.add(_Op.add(this.size, "px "), this.font);
+                this.__ctx.font = _Op.add(_Op.add(this.size(), "px "), this.font());
             }
         }, {
             key: "reset",
@@ -159,36 +176,16 @@ var _Op = function () {
                 this.__ctx.textAlign = "left";
                 this.__ctx.textBaseline = "top";
                 this.__ctx.fillStyle = this.__color;
-                // console.log(this.size, this.__ctx);
+                // console.log(this.size(), this.__ctx);
                 var words = b.split("\n");
                 for (var i = 0; _Op.less(i, words.length); i++) {
                     this.__ctx.fillText(words[i], this.x, this.y);
-                    if (_Op.equal(i, _Op.sub(words.length, 1))) this.x += _Op.add(_Op.div(_Op.mul(this.size, b.length), 2), 1);else {
+                    if (_Op.equal(i, _Op.sub(words.length, 1))) this.x += this.__ctx.measureText(words[i]).x;else {
                         this.x = this.startX;
-                        this.y += this.size;
+                        this.y += this.__ctx.measureText(words[i]).y;
                     }
                 }
                 return this;
-            }
-        }, {
-            key: "size",
-            get: function get() {
-                return this.__size;
-            },
-            set: function set(n) {
-                this.__size = n;
-                this.update();
-                return this.__size;
-            }
-        }, {
-            key: "font",
-            get: function get() {
-                return this.__font;
-            },
-            set: function set(f) {
-                this.__font = f;
-                this.update();
-                return this.__font;
             }
         }]);
 
