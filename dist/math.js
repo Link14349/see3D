@@ -1163,6 +1163,10 @@ var _Op = function () {
                     q.qv = _Op.div(q.qv, b);
                     return q;
                 }
+                if (_Op.equal(b.type, "Quaternion")) {
+                    var b_ = b.reciprocal();
+                    return _Op.mul(this, b_);
+                }
             }
         }, {
             key: "inverse",

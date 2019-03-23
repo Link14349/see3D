@@ -732,6 +732,10 @@
                 q.qv = q.qv / b;
                 return q;
             }
+            if (b.type == "Quaternion") {
+                let b_ = b.reciprocal();
+                return this * b_;
+            }
         }
         inverse() {// 加法逆元素
             return new Quaternion(-this.q0, -this.qv.x, -this.qv.y, -this.qv.z);

@@ -79,10 +79,8 @@ console.time("Quaternion");
 
 var a = new Quaternion(1, 2, 3, 4);
 var b = new Quaternion(1, 2, 3, 4);
-var c = _Op.add(a, b);
-var d = _Op.mul(a, b);
-console.log(c);
-console.log(d);
+console.log(_Op.add(a, b));
+console.log(_Op.mul(a, b));
 console.log(a.inverse());
 console.log(a.conjugate());
 console.log(_Op.mul(a, a.conjugate()));
@@ -91,6 +89,7 @@ console.log(a.mod2());
 console.log(a.norm());
 console.log(a.reciprocal());
 console.log(_Op.mul(a, a.reciprocal()));
+console.log(_Op.div(a, b));
 
 console.timeEnd("Quaternion");
 console.log("=====Quaternion Test End=====");
