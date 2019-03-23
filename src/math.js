@@ -776,6 +776,117 @@
         }
     }
 
+    /** todo 提供2D极坐标类 */
+    // 2D极坐标: x 代表 r, y 代表 theta
+    class Polar2D extends Vector2 {
+        constructor(r = 0, theta = 0) {
+            super(r ,theta);
+        }
+        get r() {
+            return this.get(0);
+        }
+        get theta() {
+            return this.get(1);
+        }
+        set r(n) {
+            this.set(0, n);
+            return n;
+        }
+        set theta(n) {
+            this.set(1, n);
+            return n;
+        }
+    }
+
+    /** todo 提供3D柱面坐标类 */
+    // 3D柱面坐标: x 代表 r, y 代表 theta, z 代表 z
+    class Cylindrical3D extends Vector3 {
+        constructor(r = 0, theta = 0, z = 0) {
+            super(r ,theta, z);
+        }
+        get r() {
+            return this.get(0);
+        }
+        get theta() {
+            return this.get(1);
+        }
+        set r(n) {
+            this.set(0, n);
+            return n;
+        }
+        set theta(n) {
+            this.set(1, n);
+            return n;
+        }
+    }
+    /** todo 提供3D球面坐标类 */
+    // 3D球面坐标: x 代表 rho, y 代表 phi, z 代表 theta
+    class Spherical3D extends Vector3 {
+        constructor(rho = 0, phi = 0, theta = 0) {
+            super(rho ,phi, theta);
+        }
+        get rho() {
+            return this.get(0);
+        }
+        get phi() {
+            return this.get(1);
+        }
+        get theta() {
+            return this.get(2);
+        }
+        set rho(n) {
+            this.set(0, n);
+            return n;
+        }
+        set phi(n) {
+            this.set(1, n);
+            return n;
+        }
+        set theta(n) {
+            this.set(2, n);
+            return n;
+        }
+    }
+
+    // 坐标转换
+    /** todo 2D极坐标转2D笛卡尔坐标 */
+    function polar2DToRect2D(polar) {
+        return new Vector2(polar.r * Math.cos(polar.theta), polar.r * Math.sin(polar.theta));
+    }
+    /** todo 2D笛卡尔坐标转2D极坐标 */
+    function rect2DToPolar2D(point) {
+        let d = (Math.atan(point.y / point.x));
+        return new Polar2D(Math.sqrt(point.x * point.x + point.y * point.y), String(d) === "NaN" ? 0 : d);
+    }
+    /** todo 3D柱面坐标转3D笛卡尔坐标 */
+    function cylindrical3DToRect3D(cylindrical) {
+        return new Vector3(cylindrical.r * Math.cos(cylindrical.theta), cylindrical.r * Math.sin(cylindrical.theta), cylindrical.z);
+    }
+    /** todo 3D笛卡尔坐标转3D柱面坐标 */
+    function rect3DToCylindrical3D(point) {
+        let d = (Math.atan(point.y / point.x));
+        return new Cylindrical3D(Math.sqrt(point.x * point.x + point.y * point.y), String(d) === "NaN" ? 0 : d, point.z);
+    }
+    /** todo 3D球面坐标转3D笛卡尔坐标 */
+    function spherical3DToRect3D(spherical) {
+        return new Vector3(
+            spherical.rho * Math.sin(spherical.phi) * Math.cos(spherical.theta),
+            spherical.rho * Math.sin(spherical.phi) * Math.sin(spherical.theta),
+            spherical.rho * Math.cos(spherical.phi)
+        );
+    }
+    /** todo 3D笛卡尔坐标转3D1球面坐标 */
+    function rect3DToSpherical3D(point) {
+        let d1 = (Math.atan(point.y / point.x));
+        let rho = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+        let d2 = (Math.acos(point.z / rho));
+        return new Spherical3D(
+            rho,
+            String(d1) === "NaN" ? 0 : d1,
+            String(d2) === "NaN" ? 0 : d2,
+        );
+    }
+
     // 在库中定义所有的接口
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
@@ -787,6 +898,7 @@
 
     lib.define("Vector", Vector);
     lib.define("Vector2", Vector2);
+    lib.define("Polar2D", Polar2D);
     lib.define("Vector3", Vector3);
     lib.define("Vector4", Vector4);
 
@@ -803,6 +915,17 @@
     lib.define("intersSegmentPlane", intersSegmentPlane);
 
     lib.define("Quaternion", Quaternion);
+
+    lib.define("Polar2D", Polar2D);
+    lib.define("Cylindrical3D", Cylindrical3D);
+    lib.define("Spherical3D", Spherical3D);
+
+    lib.define("polar2DToRect2D", polar2DToRect2D);
+    lib.define("rect2DToPolar2D", rect2DToPolar2D);
+    lib.define("cylindrical3DToRect3D", cylindrical3DToRect3D);
+    lib.define("rect3DToCylindrical3D", rect3DToCylindrical3D);
+    lib.define("spherical3DToRect3D", spherical3DToRect3D);
+    lib.define("rect3DToSpherical3D", rect3DToSpherical3D);
 
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中

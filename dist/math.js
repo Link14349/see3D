@@ -1220,9 +1220,167 @@ var _Op = function () {
         return Quaternion;
     }(See3D.LibraryDefineObject);
 
+    /** todo 提供2D极坐标类 */
+    // 2D极坐标: x 代表 r, y 代表 theta
+
+
+    var Polar2D = function (_Vector4) {
+        _inherits(Polar2D, _Vector4);
+
+        function Polar2D() {
+            var r = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : 0;
+            var theta = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 0;
+
+            _classCallCheck(this, Polar2D);
+
+            return _possibleConstructorReturn(this, (Polar2D.__proto__ || Object.getPrototypeOf(Polar2D)).call(this, r, theta));
+        }
+
+        _createClass(Polar2D, [{
+            key: "r",
+            get: function get() {
+                return this.get(0);
+            },
+            set: function set(n) {
+                this.set(0, n);
+                return n;
+            }
+        }, {
+            key: "theta",
+            get: function get() {
+                return this.get(1);
+            },
+            set: function set(n) {
+                this.set(1, n);
+                return n;
+            }
+        }]);
+
+        return Polar2D;
+    }(Vector2);
+
+    /** todo 提供3D柱面坐标类 */
+    // 3D柱面坐标: x 代表 r, y 代表 theta, z 代表 z
+
+
+    var Cylindrical3D = function (_Vector5) {
+        _inherits(Cylindrical3D, _Vector5);
+
+        function Cylindrical3D() {
+            var r = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : 0;
+            var theta = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 0;
+            var z = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : 0;
+
+            _classCallCheck(this, Cylindrical3D);
+
+            return _possibleConstructorReturn(this, (Cylindrical3D.__proto__ || Object.getPrototypeOf(Cylindrical3D)).call(this, r, theta, z));
+        }
+
+        _createClass(Cylindrical3D, [{
+            key: "r",
+            get: function get() {
+                return this.get(0);
+            },
+            set: function set(n) {
+                this.set(0, n);
+                return n;
+            }
+        }, {
+            key: "theta",
+            get: function get() {
+                return this.get(1);
+            },
+            set: function set(n) {
+                this.set(1, n);
+                return n;
+            }
+        }]);
+
+        return Cylindrical3D;
+    }(Vector3);
+    /** todo 提供3D球面坐标类 */
+    // 3D球面坐标: x 代表 rho, y 代表 phi, z 代表 theta
+
+
+    var Spherical3D = function (_Vector6) {
+        _inherits(Spherical3D, _Vector6);
+
+        function Spherical3D() {
+            var rho = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : 0;
+            var phi = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 0;
+            var theta = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : 0;
+
+            _classCallCheck(this, Spherical3D);
+
+            return _possibleConstructorReturn(this, (Spherical3D.__proto__ || Object.getPrototypeOf(Spherical3D)).call(this, rho, phi, theta));
+        }
+
+        _createClass(Spherical3D, [{
+            key: "rho",
+            get: function get() {
+                return this.get(0);
+            },
+            set: function set(n) {
+                this.set(0, n);
+                return n;
+            }
+        }, {
+            key: "phi",
+            get: function get() {
+                return this.get(1);
+            },
+            set: function set(n) {
+                this.set(1, n);
+                return n;
+            }
+        }, {
+            key: "theta",
+            get: function get() {
+                return this.get(2);
+            },
+            set: function set(n) {
+                this.set(2, n);
+                return n;
+            }
+        }]);
+
+        return Spherical3D;
+    }(Vector3);
+
+    // 坐标转换
+    /** todo 2D极坐标转2D笛卡尔坐标 */
+
+
+    function polar2DToRect2D(polar) {
+        return new Vector2(_Op.mul(polar.r, Math.cos(polar.theta)), _Op.mul(polar.r, Math.sin(polar.theta)));
+    }
+    /** todo 2D笛卡尔坐标转2D极坐标 */
+    function rect2DToPolar2D(point) {
+        var d = Math.atan(_Op.div(point.y, point.x));
+        return new Polar2D(Math.sqrt(_Op.add(_Op.mul(point.x, point.x), _Op.mul(point.y, point.y))), String(d) === "NaN" ? 0 : d);
+    }
+    /** todo 3D柱面坐标转3D笛卡尔坐标 */
+    function cylindrical3DToRect3D(cylindrical) {
+        return new Vector3(_Op.mul(cylindrical.r, Math.cos(cylindrical.theta)), _Op.mul(cylindrical.r, Math.sin(cylindrical.theta)), cylindrical.z);
+    }
+    /** todo 3D笛卡尔坐标转3D柱面坐标 */
+    function rect3DToCylindrical3D(point) {
+        var d = Math.atan(_Op.div(point.y, point.x));
+        return new Cylindrical3D(Math.sqrt(_Op.add(_Op.mul(point.x, point.x), _Op.mul(point.y, point.y))), String(d) === "NaN" ? 0 : d, point.z);
+    }
+    /** todo 3D球面坐标转3D笛卡尔坐标 */
+    function spherical3DToRect3D(spherical) {
+        return new Vector3(_Op.mul(_Op.mul(spherical.rho, Math.sin(spherical.phi)), Math.cos(spherical.theta)), _Op.mul(_Op.mul(spherical.rho, Math.sin(spherical.phi)), Math.sin(spherical.theta)), _Op.mul(spherical.rho, Math.cos(spherical.phi)));
+    }
+    /** todo 3D笛卡尔坐标转3D1球面坐标 */
+    function rect3DToSpherical3D(point) {
+        var d1 = Math.atan(_Op.div(point.y, point.x));
+        var rho = Math.sqrt(_Op.add(_Op.add(_Op.mul(point.x, point.x), _Op.mul(point.y, point.y)), _Op.mul(point.z, point.z)));
+        var d2 = Math.acos(_Op.div(point.z, rho));
+        return new Spherical3D(rho, String(d1) === "NaN" ? 0 : d1, String(d2) === "NaN" ? 0 : d2);
+    }
+
     // 在库中定义所有的接口
-
-
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
     lib.define("probably", probably);
@@ -1233,6 +1391,7 @@ var _Op = function () {
 
     lib.define("Vector", Vector);
     lib.define("Vector2", Vector2);
+    lib.define("Polar2D", Polar2D);
     lib.define("Vector3", Vector3);
     lib.define("Vector4", Vector4);
 
@@ -1249,6 +1408,17 @@ var _Op = function () {
     lib.define("intersSegmentPlane", intersSegmentPlane);
 
     lib.define("Quaternion", Quaternion);
+
+    lib.define("Polar2D", Polar2D);
+    lib.define("Cylindrical3D", Cylindrical3D);
+    lib.define("Spherical3D", Spherical3D);
+
+    lib.define("polar2DToRect2D", polar2DToRect2D);
+    lib.define("rect2DToPolar2D", rect2DToPolar2D);
+    lib.define("cylindrical3DToRect3D", cylindrical3DToRect3D);
+    lib.define("rect3DToCylindrical3D", rect3DToCylindrical3D);
+    lib.define("spherical3DToRect3D", spherical3DToRect3D);
+    lib.define("rect3DToSpherical3D", rect3DToSpherical3D);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中
