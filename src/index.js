@@ -145,7 +145,7 @@ class See3D {
         }
         get(name) {
             if (this.defines[name].private) {
-                console.error(new Error("Error 201: It's a private value"));
+                console.error(new Error("Error 99: It's a private value"));
             }
             return this.defines[name];
         }
