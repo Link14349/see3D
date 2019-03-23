@@ -89,16 +89,17 @@ var _Op = function () {
 !function () {
     var lib = new See3D.Library("Math3D"); // 生成一个新的See3D库
 
+
+    /** todo 一些关于精度问题的转化 */
     // 支持的最小精度
     var smallest = 1e-5;
+    var smallestLen = 5;
 
     function probably(n) {
-        var v = Number(n.toFixed(5));
-        if (_Op.greaterEqual(_Op.add(v, smallest), n)) return v;
-        return n;
+        return Number(n.toFixed(smallestLen));
     }
 
-    // 枚举类型
+    /** todo 枚举类型 */
 
     var Enum = function (_See3D$LibraryDefineO) {
         _inherits(Enum, _See3D$LibraryDefineO);
@@ -132,7 +133,7 @@ var _Op = function () {
         return Enum;
     }(See3D.LibraryDefineObject);
 
-    // 向量类
+    /** todo 向量类 */
 
 
     var Vector = function (_See3D$LibraryDefineO2) {
@@ -144,31 +145,55 @@ var _Op = function () {
             var _this2 = _possibleConstructorReturn(this, (Vector.__proto__ || Object.getPrototypeOf(Vector)).call(this, "Vector"));
 
             _this2.array = [];
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
+            if (arr.type && _Op.equal(arr.type, "Vector")) {
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
 
-            try {
-                for (var _iterator = arr[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var i = _step.value;
-                    _this2.array.push(i);
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
                 try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
+                    for (var _iterator = arr.array[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var _i = _step.value;
+                        _this2.array.push(_i);
                     }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
                 } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
                     }
                 }
-            }
+            } else {
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
 
-            return _this2;
+                try {
+                    for (var _iterator2 = arr[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var _i2 = _step2.value;
+                        _this2.array.push(_i2);
+                    }
+                } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+            }return _this2;
         }
 
         _createClass(Vector, [{
@@ -186,27 +211,27 @@ var _Op = function () {
             key: "mod",
             value: function mod() {
                 var sum = 0;
-                var _iteratorNormalCompletion2 = true;
-                var _didIteratorError2 = false;
-                var _iteratorError2 = undefined;
+                var _iteratorNormalCompletion3 = true;
+                var _didIteratorError3 = false;
+                var _iteratorError3 = undefined;
 
                 try {
-                    for (var _iterator2 = this.array[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                        var i = _step2.value;
+                    for (var _iterator3 = this.array[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                        var i = _step3.value;
 
                         sum += _Op.pow(i, 2);
                     }
                 } catch (err) {
-                    _didIteratorError2 = true;
-                    _iteratorError2 = err;
+                    _didIteratorError3 = true;
+                    _iteratorError3 = err;
                 } finally {
                     try {
-                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                            _iterator2.return();
+                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                            _iterator3.return();
                         }
                     } finally {
-                        if (_didIteratorError2) {
-                            throw _iteratorError2;
+                        if (_didIteratorError3) {
+                            throw _iteratorError3;
                         }
                     }
                 }
@@ -251,8 +276,8 @@ var _Op = function () {
                             return null;
                         }
                         var v = [];
-                        for (var _i in this.array) {
-                            v.push(_Op.add(this.array[_i], b.array[_i]));
+                        for (var _i3 in this.array) {
+                            v.push(_Op.add(this.array[_i3], b.array[_i3]));
                         }
                         return new Vector(v);
                     }
@@ -275,8 +300,8 @@ var _Op = function () {
                             return null;
                         }
                         var v = [];
-                        for (var _i2 in this.array) {
-                            v.push(_Op.sub(this.array[_i2], b.array[_i2]));
+                        for (var _i4 in this.array) {
+                            v.push(_Op.sub(this.array[_i4], b.array[_i4]));
                         }
                         return new Vector(v);
                     }
@@ -312,8 +337,8 @@ var _Op = function () {
                     // console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
                     var a = new Matrix(this.length, 1, [this.array]);
                     var arr = [];
-                    for (var _i3 = 0; _Op.less(_i3, b.length); _i3++) {
-                        arr.push([b.array[_i3]]);
+                    for (var _i5 = 0; _Op.less(_i5, b.length); _i5++) {
+                        arr.push([b.array[_i5]]);
                     }
                     b = new Matrix(1, b.length, arr);
                     // console.log(a);
@@ -390,7 +415,15 @@ var _Op = function () {
 
             _classCallCheck(this, Vector2);
 
-            return _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, [x, y]));
+            if (x.type && _Op.equal(x.type, "Vector")) {
+                ;
+
+                var _this3 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, x));
+            } else {
+                ;
+
+                var _this3 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, [x, y]));
+            }return _possibleConstructorReturn(_this3);
         }
 
         _createClass(Vector2, [{
@@ -431,7 +464,15 @@ var _Op = function () {
 
             _classCallCheck(this, Vector3);
 
-            return _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, [x, y, z]));
+            if (x.type && _Op.equal(x.type, "Vector")) {
+                ;
+
+                var _this4 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, x));
+            } else {
+                ;
+
+                var _this4 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, [x, y, z]));
+            }return _possibleConstructorReturn(_this4);
         }
 
         _createClass(Vector3, [{
@@ -502,7 +543,15 @@ var _Op = function () {
 
             _classCallCheck(this, Vector4);
 
-            return _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, [x, y, z, w]));
+            if (x.type && _Op.equal(x.type, "Vector")) {
+                ;
+
+                var _this5 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, x));
+            } else {
+                ;
+
+                var _this5 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, [x, y, z, w]));
+            }return _possibleConstructorReturn(_this5);
         }
 
         _createClass(Vector4, [{
@@ -551,7 +600,7 @@ var _Op = function () {
         return Vector4;
     }(Vector);
 
-    // 矩阵类
+    /** todo 矩阵类 */
 
 
     var Matrix = function (_See3D$LibraryDefineO3) {
@@ -565,12 +614,24 @@ var _Op = function () {
             var _this6 = _possibleConstructorReturn(this, (Matrix.__proto__ || Object.getPrototypeOf(Matrix)).call(this, "Matrix"));
 
             _this6.array = [];
-            _this6.__w = w;
-            _this6.__h = h;
-            for (var i = 0; _Op.less(i, h); i++) {
-                _this6.array.push([]);
-                for (var j = 0; _Op.less(j, w); j++) {
-                    if (typeof fill === "number") _this6.array[i].push(fill);else _this6.array[i].push(fill[i][j]);
+            if (w.type && _Op.equal(w.type, "Matrix")) {
+                // 复制构造函数
+                _this6.__w = w.w;
+                _this6.__h = w.h;
+                for (var i = 0; _Op.less(i, _this6.__h); i++) {
+                    _this6.array.push([]);
+                    for (var j = 0; _Op.less(j, _this6.__w); j++) {
+                        _this6.array[i].push(w.array[i][j]);
+                    }
+                }
+            } else {
+                _this6.__w = w;
+                _this6.__h = h;
+                for (var _i6 = 0; _Op.less(_i6, h); _i6++) {
+                    _this6.array.push([]);
+                    for (var _j = 0; _Op.less(_j, w); _j++) {
+                        if (typeof fill === "number") _this6.array[_i6].push(fill);else _this6.array[_i6].push(fill[_i6][_j]);
+                    }
                 }
             }
             return _this6;
@@ -658,9 +719,9 @@ var _Op = function () {
                     return c;
                 } else {
                     var _c = new Matrix(this.w, this.h, [].concat(this.array));
-                    for (var _i4 = 0; _Op.less(_i4, this.h); _i4++) {
-                        for (var _j = 0; _Op.less(_j, this.w); _j++) {
-                            _c.array[_i4][_j] *= b;
+                    for (var _i7 = 0; _Op.less(_i7, this.h); _i7++) {
+                        for (var _j2 = 0; _Op.less(_j2, this.w); _j2++) {
+                            _c.array[_i7][_j2] *= b;
                         }
                     }
                     return _c;
@@ -722,9 +783,11 @@ var _Op = function () {
         return Matrix2x2;
     }(Matrix);
 
-    // 直线类
+    /** todo 直线类 */
     // 表示方法: 参数化直线
     // 即: 起点, 终点, 方向
+    // p(x, y, z) = p0 + v_ * t
+    // t ∈ [-∞, +∞]
 
 
     var Parmline2D = function (_See3D$LibraryDefineO4) {
@@ -735,9 +798,10 @@ var _Op = function () {
 
             var _this8 = _possibleConstructorReturn(this, (Parmline2D.__proto__ || Object.getPrototypeOf(Parmline2D)).call(this, "Parmline"));
 
-            _this8.p0 = v0;
-            _this8.p1 = v1;
-            _this8.v = _Op.sub(v1, v0);
+            _this8.p0 = new Vector2(v0);
+            _this8.p1 = new Vector2(v1);
+            _this8.v = new Vector2(_Op.sub(v1, v0));
+            _this8.v_ = _this8.v.norm();
             return _this8;
         }
 
@@ -752,19 +816,107 @@ var _Op = function () {
 
             var _this9 = _possibleConstructorReturn(this, (Parmline3D.__proto__ || Object.getPrototypeOf(Parmline3D)).call(this, "Parmline"));
 
-            _this9.p0 = v0;
-            _this9.p1 = v1;
-            _this9.v = _Op.sub(v1, v0);
+            _this9.p0 = new Vector3(v0);
+            _this9.p1 = new Vector3(v1);
+            _this9.v = new Vector3(_Op.sub(v1, v0));
+            _this9.v_ = _this9.v.norm();
             return _this9;
         }
 
         return Parmline3D;
     }(See3D.LibraryDefineObject);
 
+    /** todo 平面类 */
+    // 表示方法: 点-法线形式
+    // a * (x - x0) + b * (y - y0) + c * (z - z0) = 0
+    // 或
+    // a * x + b * y + c * z + (-a * x0 - b * y0 - c * z0) = 0
+
+
+    var Plane3D = function (_See3D$LibraryDefineO6) {
+        _inherits(Plane3D, _See3D$LibraryDefineO6);
+
+        function Plane3D(n, p0) {
+            _classCallCheck(this, Plane3D);
+
+            var _this10 = _possibleConstructorReturn(this, (Plane3D.__proto__ || Object.getPrototypeOf(Plane3D)).call(this, "Plane"));
+
+            _this10.n = new Vector3(n); // 法线向量
+            _this10.p0 = new Vector3(p0); // 平面上一点
+            return _this10;
+        }
+
+        return Plane3D;
+    }(See3D.LibraryDefineObject);
+
+    /** todo 平面分割3D空间, 判断点位于哪个半空间中, -1为负半空间, 0为平面上, 1为正半空间 */
+
+
+    function PointPositionWithPlane(point, plane) {
+        var a = plane.n.x,
+            b = plane.n.y,
+            c = plane.n.z;
+        var hs = _Op.add(_Op.add(_Op.mul(a, _Op.sub(point.x, plane.p0.x)), _Op.mul(b, _Op.sub(point.y, plane.p0.y))), _Op.mul(c, _Op.sub(point.z, plane.p0.z)));
+        if (_Op.greater(hs, 0)) return 1;
+        if (_Op.less(hs, 0)) return -1;
+        return 0;
+    }
+
+    /** todo 计算两参数化2D线段的交点 */
+    function intersPoints2D(pl1, pl2) {
+        var p0 = pl1.p0;
+        var p2 = pl2.p0;
+        var a = p0.x,
+            b = p0.y,
+            c = p2.x,
+            d = p2.y;
+        var p0v = pl1.v;
+        var p2v = pl2.v;
+        var e = p0v.x,
+            f = p0v.y,
+            g = p2v.x,
+            h = p2v.y;
+        // console.log(a, b, c, d, e, f, g, h);
+        var t1 = _Op.div(_Op.sub(_Op.mul(h, _Op.sub(c, a)), _Op.mul(g, _Op.sub(d, b))), _Op.sub(_Op.mul(h, e), _Op.mul(g, f)));
+        // let t2 =
+        //     (-c + a + e * t1)
+        //     /
+        //     g
+        // ;
+        var x = _Op.add(a, _Op.mul(e, t1));
+        var y = _Op.add(b, _Op.mul(f, t1));
+        return new Vector2(x, y);
+    }
+    /** todo 计算两参数化3D线段的交点 */
+    function intersPoints3D(pl1, pl2) {
+        var p0 = pl1.p0;
+        var p2 = pl2.p0;
+        var a = p0.x,
+            b = p0.y,
+            c = p2.x,
+            d = p2.y;
+        var p0v = pl1.v;
+        var p2v = pl2.v;
+        var e = p0v.x,
+            f = p0v.y,
+            g = p2v.x,
+            h = p2v.y;
+        // console.log(a, b, c, d, e, f, g, h);
+        var t1 = _Op.div(_Op.sub(_Op.mul(h, _Op.sub(c, a)), _Op.mul(g, _Op.sub(d, b))), _Op.sub(_Op.mul(h, e), _Op.mul(g, f)));
+        // let t2 =
+        //     (-c + a + e * t1)
+        //     /
+        //     g
+        // ;
+        var x = _Op.add(a, _Op.mul(e, t1));
+        var y = _Op.add(b, _Op.mul(f, t1));
+        var z = _Op.add(p0.z, _Op.mul(p0v.z, t1));
+        return new Vector3(x, y, z);
+    }
+
     // 在库中定义所有的接口
-
-
     lib.define("smallest", smallest);
+    lib.define("smallestLen", smallestLen);
     lib.define("probably", probably);
 
     lib.define("Enum", Enum);
@@ -779,6 +931,10 @@ var _Op = function () {
 
     lib.define("Parmline2D", Parmline2D);
     lib.define("Parmline3D", Parmline3D);
+    lib.define("Plane3D", Plane3D);
+    lib.define("PointPositionWithPlane", PointPositionWithPlane);
+    lib.define("intersPoints2D", intersPoints2D);
+    lib.define("intersPoints3D", intersPoints3D);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中

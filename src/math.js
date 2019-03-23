@@ -3,16 +3,17 @@
 !function () {
     let lib = new See3D.Library("Math3D");// 生成一个新的See3D库
 
+
+    /** todo 一些关于精度问题的转化 */
     // 支持的最小精度
     const smallest = 1e-5;
-    
+    const smallestLen = 5;
+
     function probably(n) {
-        let v = Number(n.toFixed(5));
-        if (v + smallest >= n) return v;
-        return n;
+        return Number(n.toFixed(smallestLen));
     }
 
-    // 枚举类型
+    /** todo 枚举类型 */
     class Enum extends See3D.LibraryDefineObject {
         constructor(enums) {
             super("Enum");
@@ -33,12 +34,13 @@
         }
     }
 
-    // 向量类
+    /** todo 向量类 */
     class Vector extends See3D.LibraryDefineObject {
         constructor(arr) {
             super("Vector");
             this.array = [];
-            for (let i of arr) this.array.push(i);
+            if (arr.type && arr.type == "Vector") for (let i of arr.array) this.array.push(i);
+            else for (let i of arr) this.array.push(i);
         }
         set(index, val) {
             this.array[index] = val;
@@ -196,7 +198,8 @@
     }
     class Vector2 extends Vector {
         constructor(x = 0, y = 0) {
-            super([x, y]);
+            if (x.type && x.type == "Vector") super(x);
+            else super([x, y]);
         }
         get x() {
             return this.get(0);
@@ -218,7 +221,8 @@
     }
     class Vector3 extends Vector {
         constructor(x = 0, y = 0, z = 0) {
-            super([x, y, z]);
+            if (x.type && x.type == "Vector") super(x);
+            else super([x, y, z]);
         }
         get x() {
             return this.get(0);
@@ -266,7 +270,8 @@
     }
     class Vector4 extends Vector {
         constructor(x = 0, y = 0, z = 0, w = 1) {
-            super([x, y, z, w]);
+            if (x.type && x.type == "Vector") super(x);
+            else super([x, y, z, w]);
         }
         get x() {
             return this.get(0) / this.w;
@@ -301,20 +306,31 @@
         }
     }
 
-    // 矩阵类
+    /** todo 矩阵类 */
     class Matrix extends See3D.LibraryDefineObject {
         constructor(w, h, fill = 0) {
             super("Matrix");
             this.array = [];
-            this.__w = w;
-            this.__h = h;
-            for (let i = 0 ;i < h; i++) {
-                this.array.push([]);
-                for (let j = 0; j < w; j++) {
-                    if (typeof fill === "number")
-                        this.array[i].push(fill);
-                    else
-                        this.array[i].push(fill[i][j]);
+            if (w.type && w.type == "Matrix") {// 复制构造函数
+                this.__w = w.w;
+                this.__h = w.h;
+                for (let i = 0; i < this.__h; i++) {
+                    this.array.push([]);
+                    for (let j = 0; j < this.__w; j++) {
+                        this.array[i].push(w.array[i][j]);
+                    }
+                }
+            } else {
+                this.__w = w;
+                this.__h = h;
+                for (let i = 0 ;i < h; i++) {
+                    this.array.push([]);
+                    for (let j = 0; j < w; j++) {
+                        if (typeof fill === "number")
+                            this.array[i].push(fill);
+                        else
+                            this.array[i].push(fill[i][j]);
+                    }
                 }
             }
         }
@@ -426,28 +442,105 @@
         }
     }
 
-    // 直线类
+    /** todo 直线类 */
     // 表示方法: 参数化直线
     // 即: 起点, 终点, 方向
+    // p(x, y, z) = p0 + v_ * t
+    // t ∈ [-∞, +∞]
     class Parmline2D extends See3D.LibraryDefineObject {
         constructor(v0, v1) {
             super("Parmline");
-            this.p0 = v0;
-            this.p1 = v1;
-            this.v = v1 - v0;
+            this.p0 = new Vector2(v0);
+            this.p1 = new Vector2(v1);
+            this.v = new Vector2(v1 - v0);
+            this.v_ = this.v.norm();
         }
     }
     class Parmline3D extends See3D.LibraryDefineObject {
         constructor(v0, v1) {
             super("Parmline");
-            this.p0 = v0;
-            this.p1 = v1;
-            this.v = v1 - v0;
+            this.p0 = new Vector3(v0);
+            this.p1 = new Vector3(v1);
+            this.v = new Vector3(v1 - v0);
+            this.v_ = this.v.norm();
         }
+    }
+
+    /** todo 平面类 */
+    // 表示方法: 点-法线形式
+    // a * (x - x0) + b * (y - y0) + c * (z - z0) = 0
+    // 或
+    // a * x + b * y + c * z + (-a * x0 - b * y0 - c * z0) = 0
+    class Plane3D extends See3D.LibraryDefineObject {
+        constructor(n, p0) {
+            super("Plane");
+            this.n = new Vector3(n);// 法线向量
+            this.p0 = new Vector3(p0);// 平面上一点
+        }
+    }
+
+
+    /** todo 平面分割3D空间, 判断点位于哪个半空间中, -1为负半空间, 0为平面上, 1为正半空间 */
+    function PointPositionWithPlane(point, plane) {
+        let a = plane.n.x, b = plane.n.y, c = plane.n.z;
+        let hs = a * (point.x - plane.p0.x) + b * (point.y - plane.p0.y) + c * (point.z - plane.p0.z);
+        if (hs > 0) return 1;
+        if (hs < 0) return -1;
+        return 0;
+    }
+
+
+    /** todo 计算两参数化2D线段的交点 */
+    function intersPoints2D(pl1, pl2) {
+        let p0 = pl1.p0;
+        let p2 = pl2.p0;
+        let a = p0.x, b = p0.y, c = p2.x, d = p2.y;
+        let p0v = pl1.v;
+        let p2v = pl2.v;
+        let e = p0v.x, f = p0v.y, g = p2v.x, h = p2v.y;
+        // console.log(a, b, c, d, e, f, g, h);
+        let t1 =
+            (h * (c - a) - g * (d - b))
+            /
+            (h * e - g * f)
+        ;
+        // let t2 =
+        //     (-c + a + e * t1)
+        //     /
+        //     g
+        // ;
+        let x = a + e * t1;
+        let y = b + f * t1;
+        return new Vector2(x, y);
+    }
+    /** todo 计算两参数化3D线段的交点 */
+    function intersPoints3D(pl1, pl2) {
+        let p0 = pl1.p0;
+        let p2 = pl2.p0;
+        let a = p0.x, b = p0.y, c = p2.x, d = p2.y;
+        let p0v = pl1.v;
+        let p2v = pl2.v;
+        let e = p0v.x, f = p0v.y, g = p2v.x, h = p2v.y;
+        // console.log(a, b, c, d, e, f, g, h);
+        let t1 =
+            (h * (c - a) - g * (d - b))
+            /
+            (h * e - g * f)
+        ;
+        // let t2 =
+        //     (-c + a + e * t1)
+        //     /
+        //     g
+        // ;
+        let x = a + e * t1;
+        let y = b + f * t1;
+        let z = p0.z + p0v.z * t1;
+        return new Vector3(x, y, z);
     }
 
     // 在库中定义所有的接口
     lib.define("smallest", smallest);
+    lib.define("smallestLen", smallestLen);
     lib.define("probably", probably);
 
     lib.define("Enum", Enum);
@@ -462,6 +555,10 @@
 
     lib.define("Parmline2D", Parmline2D);
     lib.define("Parmline3D", Parmline3D);
+    lib.define("Plane3D", Plane3D);
+    lib.define("PointPositionWithPlane", PointPositionWithPlane);
+    lib.define("intersPoints2D", intersPoints2D);
+    lib.define("intersPoints3D", intersPoints3D);
 
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中

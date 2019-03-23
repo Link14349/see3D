@@ -88,6 +88,7 @@ class See3D {
      */
     static library(entry) {
         // entry
+        console.log("%cSee3D library %s loaded.", "color:#FF1493", entry.name);
         See3D.__libraries.set(entry.name, entry);
     }
     /**
@@ -96,6 +97,7 @@ class See3D {
      * @desc 添加应默认自带的库
      */
     static load(name) {
+        console.log("%cSee3D library %s added to See3D global.", "color:#C71585", name);
         See3D.__loads.push(name);
     }
     /**
@@ -114,7 +116,7 @@ class See3D {
 
 !function () {
     See3D.version = "v0.0.1";
-    console.log("See3D engine (" + See3D.version + ") launched");
+    console.log("See3D engine (%s) launched", See3D.version);
     See3D.DEBUG = true;
     /**
      * @property

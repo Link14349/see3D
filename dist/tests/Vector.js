@@ -75,6 +75,7 @@ var _Op = function () {
 }();
 
 console.log("=========Vector Test=========");
+console.time("Vector");
 
 var a = new Vector2(1, 1);
 var b = new Vector2(1, 1);
@@ -87,6 +88,9 @@ console.log(_Op.mul(a, b));
 var c = new Vector3(1, 2, 3);
 var d = new Vector3(4, 5, 6);
 console.log(_Op.mul(c, d));
+var e = new Vector(c);
+console.log(e);
 
+console.timeEnd("Vector");
 console.log("=======Vector Test End=======");
 //# sourceMappingURL=Vector.js.map

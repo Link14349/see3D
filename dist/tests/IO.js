@@ -75,6 +75,7 @@ var _Op = function () {
 }();
 
 console.log("===========IO Test===========");
+console.time("IO");
 
 game.sout.size(30);
 _Op.binaryLShift(_Op.binaryLShift(game.sout, "Hello world!\n"), "I love 3D!\n");
@@ -85,5 +86,6 @@ _Op.binaryLShift(game.sout, "Created by See3D");
 game.sout.size(50);
 _Op.binaryLShift(game.sout, "123\n");
 
+console.timeEnd("IO");
 console.log("=========IO Test End=========");
 //# sourceMappingURL=IO.js.map

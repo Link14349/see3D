@@ -75,6 +75,7 @@ var _Op = function () {
 }();
 
 console.log("=========Matrix Test=========");
+console.time("Matrix");
 
 var a = new Matrix(2, 2, [[0, 1], [2, 3]]);
 var b = new Matrix(2, 2, [[0, 1], [2, 3]]);
@@ -84,6 +85,9 @@ console.log(_Op.add(a, b));
 console.log(_Op.sub(a, b));
 console.log(_Op.mul(a, b));
 console.log(c.inverse());
+var d = new Matrix(a);
+console.log(d);
 
+console.timeEnd("Matrix");
 console.log("=======Matrix Test End=======");
 //# sourceMappingURL=Matrix.js.map
