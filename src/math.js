@@ -736,6 +736,11 @@
                 let b_ = b.reciprocal();
                 return this * b_;
             }
+            if (typeof b == "object")
+                console.log(new Error("Error 102: Do not support " + b.type + " and vector for div operations"));
+            else
+                console.log(new Error("Error 102: Do not support " + (typeof b) + " and vector for div operations"));
+            return null;
         }
         inverse() {// 加法逆元素
             return new Quaternion(-this.q0, -this.qv.x, -this.qv.y, -this.qv.z);

@@ -1167,6 +1167,8 @@ var _Op = function () {
                     var b_ = b.reciprocal();
                     return _Op.mul(this, b_);
                 }
+                if (_Op.equal(typeof b === "undefined" ? "undefined" : _typeof(b), "object")) console.log(new Error(_Op.add(_Op.add("Error 102: Do not support ", b.type), " and vector for div operations")));else console.log(new Error(_Op.add(_Op.add("Error 102: Do not support ", typeof b === "undefined" ? "undefined" : _typeof(b)), " and vector for div operations")));
+                return null;
             }
         }, {
             key: "inverse",
