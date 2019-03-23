@@ -1,6 +1,8 @@
 "use strict";
 'bpo enable';
 
+/** todo 为String类型添加方法 */
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; _Op.less(i, props.length); i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -87,8 +89,14 @@ var _Op = function () {
 }();
 
 !function () {
-    var lib = new See3D.Library("Math3D"); // 生成一个新的See3D库
+    String.prototype.last = function () {
+        return this[_Op.sub(this.length, 1)];
+    };
+}();
 
+/** todo 新建一个Math3D库 */
+!function () {
+    var lib = new See3D.Library("Math3D"); // 生成一个新的See3D库
 
     /** todo 一些关于精度问题的转化 */
     // 支持的最小精度
@@ -104,6 +112,10 @@ var _Op = function () {
     var Enum = function (_See3D$LibraryDefineO) {
         _inherits(Enum, _See3D$LibraryDefineO);
 
+        /*
+        * 使用方法:
+        * let colors = new Enum(["RED", "WHITE", "BLACK"])
+        */
         function Enum(enums) {
             _classCallCheck(this, Enum);
 
@@ -133,18 +145,148 @@ var _Op = function () {
         return Enum;
     }(See3D.LibraryDefineObject);
 
+    /** todo 提供数学意义上的集合类 */
+    // {(token) | expr}
+
+
+    var MathSet = function (_See3D$LibraryDefineO2) {
+        _inherits(MathSet, _See3D$LibraryDefineO2);
+
+        function MathSet(token, expr) {
+            _classCallCheck(this, MathSet);
+
+            var _this2 = _possibleConstructorReturn(this, (MathSet.__proto__ || Object.getPrototypeOf(MathSet)).call(this, "MathSet"));
+
+            if (_Op.equal(arguments.length, 1)) {
+                // 只有一个参数
+                var str = token;
+                str = str.trim();
+                if (_Op.lessEqual(str.length, 2) || _Op.notEqual(str[0], "{") || _Op.notEqual(str.last(), "}") // 不以'{'开头或不以'}'结尾
+                ) {
+                        console.error(new Error(_Op.add(_Op.add("Error 104: Illegal set string '", str), "'")));
+                        return _possibleConstructorReturn(_this2);
+                    }
+                str = str.substring(1, _Op.sub(str.length, 1));
+                token = "";
+
+                var splitIndex = str.search(/\|/);
+                if (_Op.less(splitIndex, 0)) {
+                    console.error(new Error(_Op.add(_Op.add("Error 104: Illegal set string '", str), "'")));
+                    return _possibleConstructorReturn(_this2);
+                }
+
+                // 获取token
+                for (var i = 0; _Op.less(i, splitIndex); i++) {
+                    token += str[i];
+                }
+                token = token.trim();
+
+                expr = "";
+                // 获取expr
+                for (var _i = _Op.add(splitIndex, 1); _Op.less(_i, str.length); _i++) {
+                    expr += str[_i];
+                }
+            }
+            _this2.token = token;
+            _this2.expr = expr;
+            return _this2;
+        }
+
+        _createClass(MathSet, [{
+            key: "have",
+            value: function have(n) {
+                var expr = this.expr.replace(new RegExp(_Op.add(_Op.add("([^a-zA-Z_])", this.token), "([^a-zA-Z_])"), "g"), _Op.add(_Op.add("$1", n), "$2"));
+                return Boolean(eval(expr));
+            }
+        }]);
+
+        return MathSet;
+    }(See3D.LibraryDefineObject);
+
+    /** todo 提供区间类 */
+
+
+    var Interval = function (_MathSet) {
+        _inherits(Interval, _MathSet);
+
+        function Interval(type, s, e) {
+            _classCallCheck(this, Interval);
+
+            // super("Interval");
+            var st = void 0,
+                et = void 0; // 存储是开还是闭
+            var token = "n"; // 变量名, {x | a < x < b}
+            var expr = "";
+            var firstOp = void 0,
+                lastOp = void 0;
+            if (_Op.equal(arguments.length, 1)) {
+                // 只有一个参数
+                var str = type;
+                str = str.trim();
+                st = str[0];
+                et = str.last();
+
+                // 检查类型
+                if (_Op.notEqual(st, "[") && _Op.notEqual(st, "(")) {
+                    console.error(new Error(_Op.add(_Op.add("Error 103: Illegal interval identifier '", st), "'")));
+                    return _possibleConstructorReturn(_this3);
+                }
+                if (_Op.notEqual(et, "]") && _Op.notEqual(et, ")")) {
+                    console.error(new Error(_Op.add(_Op.add("Error 103: Illegal interval identifier '", et), "'")));
+                    return _possibleConstructorReturn(_this3);
+                }
+                str = str.substring(1, _Op.sub(str.length, 1));
+                var numbers = str.split(",");
+                if (_Op.less(numbers.length, 2)) str.split(/\s+/g);
+                if (_Op.equal(st, "[")) firstOp = "<=";
+                if (_Op.equal(st, "(")) firstOp = "<";
+                if (_Op.equal(et, "]")) lastOp = "<=";
+                if (_Op.equal(et, ")")) lastOp = "<";
+                s = numbers[0];
+                e = numbers[1];
+                expr = _Op.add(_Op.add(_Op.add(_Op.add(_Op.add(_Op.add(s, firstOp), token), " && "), token), lastOp), e);
+                // this.st = st;
+                // this.et = et;
+                // this.s = numbers[0];// 区间的第一个数
+                // this.e = numbers[1];// 区间的第二个数
+            } else {
+                st = type[0];
+                et = type[1];
+                // 检查类型
+                if (_Op.notEqual(st, "[") && _Op.notEqual(st, "(")) {
+                    console.error(new Error(_Op.add(_Op.add("Error 103: Illegal interval identifier '", st), "'")));
+                    return _possibleConstructorReturn(_this3);
+                }
+                if (_Op.notEqual(et, "]") && _Op.notEqual(et, ")")) {
+                    console.error(new Error(_Op.add(_Op.add("Error 103: Illegal interval identifier '", et), "'")));
+                    return _possibleConstructorReturn(_this3);
+                }
+                if (_Op.equal(st, "[")) firstOp = "<=";
+                if (_Op.equal(st, "(")) firstOp = "<";
+                if (_Op.equal(et, "]")) lastOp = "<=";
+                if (_Op.equal(et, ")")) lastOp = "<";
+                // console.log(firstOp, lastOp, s, e);
+                expr = _Op.add(_Op.add(_Op.add(_Op.add(_Op.add(_Op.add(String(s), firstOp), token), " && "), token), lastOp), String(e));
+            }
+            return _possibleConstructorReturn(this, (Interval.__proto__ || Object.getPrototypeOf(Interval)).call(this, token, expr));
+        }
+
+        return Interval;
+    }(MathSet);
+
     /** todo 向量类 */
+    // WARNING: %代表点积, *代表叉乘
 
 
-    var Vector = function (_See3D$LibraryDefineO2) {
-        _inherits(Vector, _See3D$LibraryDefineO2);
+    var Vector = function (_See3D$LibraryDefineO3) {
+        _inherits(Vector, _See3D$LibraryDefineO3);
 
         function Vector(arr) {
             _classCallCheck(this, Vector);
 
-            var _this2 = _possibleConstructorReturn(this, (Vector.__proto__ || Object.getPrototypeOf(Vector)).call(this, "Vector"));
+            var _this4 = _possibleConstructorReturn(this, (Vector.__proto__ || Object.getPrototypeOf(Vector)).call(this, "Vector"));
 
-            _this2.array = [];
+            _this4.array = [];
             if (arr.type && _Op.equal(arr.type, "Vector")) {
                 var _iteratorNormalCompletion = true;
                 var _didIteratorError = false;
@@ -152,8 +294,8 @@ var _Op = function () {
 
                 try {
                     for (var _iterator = arr.array[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        var _i = _step.value;
-                        _this2.array.push(_i);
+                        var _i2 = _step.value;
+                        _this4.array.push(_i2);
                     }
                 } catch (err) {
                     _didIteratorError = true;
@@ -176,8 +318,8 @@ var _Op = function () {
 
                 try {
                     for (var _iterator2 = arr[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                        var _i2 = _step2.value;
-                        _this2.array.push(_i2);
+                        var _i3 = _step2.value;
+                        _this4.array.push(_i3);
                     }
                 } catch (err) {
                     _didIteratorError2 = true;
@@ -193,7 +335,7 @@ var _Op = function () {
                         }
                     }
                 }
-            }return _this2;
+            }return _this4;
         }
 
         _createClass(Vector, [{
@@ -276,8 +418,8 @@ var _Op = function () {
                             return null;
                         }
                         var v = [];
-                        for (var _i3 in this.array) {
-                            v.push(_Op.add(this.array[_i3], b.array[_i3]));
+                        for (var _i4 in this.array) {
+                            v.push(_Op.add(this.array[_i4], b.array[_i4]));
                         }
                         return new Vector(v);
                     }
@@ -300,8 +442,8 @@ var _Op = function () {
                             return null;
                         }
                         var v = [];
-                        for (var _i4 in this.array) {
-                            v.push(_Op.sub(this.array[_i4], b.array[_i4]));
+                        for (var _i5 in this.array) {
+                            v.push(_Op.sub(this.array[_i5], b.array[_i5]));
                         }
                         return new Vector(v);
                     }
@@ -334,11 +476,10 @@ var _Op = function () {
                     return tmp;
                 } else {
                     // 叉乘
-                    // console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
                     var a = new Matrix(this.length, 1, [this.array]);
                     var arr = [];
-                    for (var _i5 = 0; _Op.less(_i5, b.length); _i5++) {
-                        arr.push([b.array[_i5]]);
+                    for (var _i6 = 0; _Op.less(_i6, b.length); _i6++) {
+                        arr.push([b.array[_i6]]);
                     }
                     b = new Matrix(1, b.length, arr);
                     // console.log(a);
@@ -418,12 +559,12 @@ var _Op = function () {
             if (x.type && _Op.equal(x.type, "Vector")) {
                 ;
 
-                var _this3 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, x));
+                var _this5 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, x));
             } else {
                 ;
 
-                var _this3 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, [x, y]));
-            }return _possibleConstructorReturn(_this3);
+                var _this5 = _possibleConstructorReturn(this, (Vector2.__proto__ || Object.getPrototypeOf(Vector2)).call(this, [x, y]));
+            }return _possibleConstructorReturn(_this5);
         }
 
         _createClass(Vector2, [{
@@ -467,12 +608,12 @@ var _Op = function () {
             if (x.type && _Op.equal(x.type, "Vector")) {
                 ;
 
-                var _this4 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, x));
+                var _this6 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, x));
             } else {
                 ;
 
-                var _this4 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, [x, y, z]));
-            }return _possibleConstructorReturn(_this4);
+                var _this6 = _possibleConstructorReturn(this, (Vector3.__proto__ || Object.getPrototypeOf(Vector3)).call(this, [x, y, z]));
+            }return _possibleConstructorReturn(_this6);
         }
 
         _createClass(Vector3, [{
@@ -546,12 +687,12 @@ var _Op = function () {
             if (x.type && _Op.equal(x.type, "Vector")) {
                 ;
 
-                var _this5 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, x));
+                var _this7 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, x));
             } else {
                 ;
 
-                var _this5 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, [x, y, z, w]));
-            }return _possibleConstructorReturn(_this5);
+                var _this7 = _possibleConstructorReturn(this, (Vector4.__proto__ || Object.getPrototypeOf(Vector4)).call(this, [x, y, z, w]));
+            }return _possibleConstructorReturn(_this7);
         }
 
         _createClass(Vector4, [{
@@ -603,38 +744,38 @@ var _Op = function () {
     /** todo 矩阵类 */
 
 
-    var Matrix = function (_See3D$LibraryDefineO3) {
-        _inherits(Matrix, _See3D$LibraryDefineO3);
+    var Matrix = function (_See3D$LibraryDefineO4) {
+        _inherits(Matrix, _See3D$LibraryDefineO4);
 
         function Matrix(w, h) {
             var fill = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : 0;
 
             _classCallCheck(this, Matrix);
 
-            var _this6 = _possibleConstructorReturn(this, (Matrix.__proto__ || Object.getPrototypeOf(Matrix)).call(this, "Matrix"));
+            var _this8 = _possibleConstructorReturn(this, (Matrix.__proto__ || Object.getPrototypeOf(Matrix)).call(this, "Matrix"));
 
-            _this6.array = [];
+            _this8.array = [];
             if (w.type && _Op.equal(w.type, "Matrix")) {
                 // 复制构造函数
-                _this6.__w = w.w;
-                _this6.__h = w.h;
-                for (var i = 0; _Op.less(i, _this6.__h); i++) {
-                    _this6.array.push([]);
-                    for (var j = 0; _Op.less(j, _this6.__w); j++) {
-                        _this6.array[i].push(w.array[i][j]);
+                _this8.__w = w.w;
+                _this8.__h = w.h;
+                for (var i = 0; _Op.less(i, _this8.__h); i++) {
+                    _this8.array.push([]);
+                    for (var j = 0; _Op.less(j, _this8.__w); j++) {
+                        _this8.array[i].push(w.array[i][j]);
                     }
                 }
             } else {
-                _this6.__w = w;
-                _this6.__h = h;
-                for (var _i6 = 0; _Op.less(_i6, h); _i6++) {
-                    _this6.array.push([]);
+                _this8.__w = w;
+                _this8.__h = h;
+                for (var _i7 = 0; _Op.less(_i7, h); _i7++) {
+                    _this8.array.push([]);
                     for (var _j = 0; _Op.less(_j, w); _j++) {
-                        if (typeof fill === "number") _this6.array[_i6].push(fill);else _this6.array[_i6].push(fill[_i6][_j]);
+                        if (typeof fill === "number") _this8.array[_i7].push(fill);else _this8.array[_i7].push(fill[_i7][_j]);
                     }
                 }
             }
-            return _this6;
+            return _this8;
         }
 
         _createClass(Matrix, [{
@@ -719,9 +860,9 @@ var _Op = function () {
                     return c;
                 } else {
                     var _c = new Matrix(this.w, this.h, [].concat(this.array));
-                    for (var _i7 = 0; _Op.less(_i7, this.h); _i7++) {
+                    for (var _i8 = 0; _Op.less(_i8, this.h); _i8++) {
                         for (var _j2 = 0; _Op.less(_j2, this.w); _j2++) {
-                            _c.array[_i7][_j2] *= b;
+                            _c.array[_i8][_j2] *= b;
                         }
                     }
                     return _c;
@@ -790,37 +931,37 @@ var _Op = function () {
     // t ∈ [-∞, +∞]
 
 
-    var Parmline2D = function (_See3D$LibraryDefineO4) {
-        _inherits(Parmline2D, _See3D$LibraryDefineO4);
+    var Parmline2D = function (_See3D$LibraryDefineO5) {
+        _inherits(Parmline2D, _See3D$LibraryDefineO5);
 
         function Parmline2D(v0, v1) {
             _classCallCheck(this, Parmline2D);
 
-            var _this8 = _possibleConstructorReturn(this, (Parmline2D.__proto__ || Object.getPrototypeOf(Parmline2D)).call(this, "Parmline"));
+            var _this10 = _possibleConstructorReturn(this, (Parmline2D.__proto__ || Object.getPrototypeOf(Parmline2D)).call(this, "Parmline"));
 
-            _this8.p0 = new Vector2(v0);
-            _this8.p1 = new Vector2(v1);
-            _this8.v = new Vector2(_Op.sub(v1, v0));
-            _this8.v_ = _this8.v.norm();
-            return _this8;
+            _this10.p0 = new Vector2(v0);
+            _this10.p1 = new Vector2(v1);
+            _this10.v = new Vector2(_Op.sub(v1, v0));
+            _this10.v_ = _this10.v.norm();
+            return _this10;
         }
 
         return Parmline2D;
     }(See3D.LibraryDefineObject);
 
-    var Parmline3D = function (_See3D$LibraryDefineO5) {
-        _inherits(Parmline3D, _See3D$LibraryDefineO5);
+    var Parmline3D = function (_See3D$LibraryDefineO6) {
+        _inherits(Parmline3D, _See3D$LibraryDefineO6);
 
         function Parmline3D(v0, v1) {
             _classCallCheck(this, Parmline3D);
 
-            var _this9 = _possibleConstructorReturn(this, (Parmline3D.__proto__ || Object.getPrototypeOf(Parmline3D)).call(this, "Parmline"));
+            var _this11 = _possibleConstructorReturn(this, (Parmline3D.__proto__ || Object.getPrototypeOf(Parmline3D)).call(this, "Parmline"));
 
-            _this9.p0 = new Vector3(v0);
-            _this9.p1 = new Vector3(v1);
-            _this9.v = new Vector3(_Op.sub(v1, v0));
-            _this9.v_ = _this9.v.norm();
-            return _this9;
+            _this11.p0 = new Vector3(v0);
+            _this11.p1 = new Vector3(v1);
+            _this11.v = new Vector3(_Op.sub(v1, v0));
+            _this11.v_ = _this11.v.norm();
+            return _this11;
         }
 
         return Parmline3D;
@@ -833,17 +974,17 @@ var _Op = function () {
     // a * x + b * y + c * z + (-a * x0 - b * y0 - c * z0) = 0
 
 
-    var Plane3D = function (_See3D$LibraryDefineO6) {
-        _inherits(Plane3D, _See3D$LibraryDefineO6);
+    var Plane3D = function (_See3D$LibraryDefineO7) {
+        _inherits(Plane3D, _See3D$LibraryDefineO7);
 
         function Plane3D(n, p0) {
             _classCallCheck(this, Plane3D);
 
-            var _this10 = _possibleConstructorReturn(this, (Plane3D.__proto__ || Object.getPrototypeOf(Plane3D)).call(this, "Plane"));
+            var _this12 = _possibleConstructorReturn(this, (Plane3D.__proto__ || Object.getPrototypeOf(Plane3D)).call(this, "Plane"));
 
-            _this10.n = new Vector3(n); // 法线向量
-            _this10.p0 = new Vector3(p0); // 平面上一点
-            return _this10;
+            _this12.n = new Vector3(n); // 法线向量
+            _this12.p0 = new Vector3(p0); // 平面上一点
+            return _this12;
         }
 
         return Plane3D;
@@ -863,7 +1004,7 @@ var _Op = function () {
     }
 
     /** todo 计算两参数化2D线段的交点 */
-    function intersPoints2D(pl1, pl2) {
+    function intersParmlines2D(pl1, pl2) {
         var p0 = pl1.p0;
         var p2 = pl2.p0;
         var a = p0.x,
@@ -888,7 +1029,7 @@ var _Op = function () {
         return new Vector2(x, y);
     }
     /** todo 计算两参数化3D线段的交点 */
-    function intersPoints3D(pl1, pl2) {
+    function intersParmlines3D(pl1, pl2) {
         var p0 = pl1.p0;
         var p2 = pl2.p0;
         var a = p0.x,
@@ -914,12 +1055,175 @@ var _Op = function () {
         return new Vector3(x, y, z);
     }
 
+    var tInterval = new Interval("[0, 1]");
+
+    /** todo 计算参数化直线与平面的交点 */
+    function intersParmlinePlane(plane, parmline) {
+        // console.log(parmline);
+        var _parmline$p = parmline.p0,
+            x0 = _parmline$p.x,
+            y0 = _parmline$p.y,
+            z0 = _parmline$p.z;
+        var _parmline$v = parmline.v,
+            vx = _parmline$v.x,
+            vy = _parmline$v.y,
+            vz = _parmline$v.z;
+        var _plane$n = plane.n,
+            a = _plane$n.x,
+            b = _plane$n.y,
+            c = _plane$n.z;
+
+        var d = _Op.sub(_Op.sub(_Op.mul(-a, x0), _Op.mul(b, y0)), _Op.mul(c, z0));
+        var t = _Op.div(-_Op.add(_Op.add(_Op.add(_Op.mul(a, x0), _Op.mul(b, y0)), _Op.mul(c, z0)), d), _Op.add(_Op.add(_Op.mul(a, vx), _Op.mul(b, vy)), _Op.mul(c, vz)));
+        var x = _Op.mul(_Op.mul(x0, vx), t);
+        var y = _Op.mul(_Op.mul(y0, vy), t);
+        var z = _Op.mul(_Op.mul(z0, vz), t);
+        return new Vector3(x, y, z);
+    }
+    /** todo 计算参数化线段与平面的交点 */
+    function intersSegmentPlane(parmline, plane) {
+        var _parmline$p2 = parmline.p0,
+            x0 = _parmline$p2.x,
+            y0 = _parmline$p2.y,
+            z0 = _parmline$p2.z;
+        var _parmline$v2 = parmline.v,
+            vx = _parmline$v2.x,
+            vy = _parmline$v2.y,
+            vz = _parmline$v2.z;
+        var _plane$n2 = plane.n,
+            a = _plane$n2.x,
+            b = _plane$n2.y,
+            c = _plane$n2.z;
+
+        var d = _Op.sub(_Op.sub(_Op.mul(-a, x0), _Op.mul(b, y0)), _Op.mul(c, z0));
+        var t = _Op.div(-_Op.add(_Op.add(_Op.add(_Op.mul(a, x0), _Op.mul(b, y0)), _Op.mul(c, z0)), d), _Op.add(_Op.add(_Op.mul(a, vx), _Op.mul(b, vy)), _Op.mul(c, vz)));
+        if (!tInterval.have(t)) return null;
+        var x = _Op.mul(_Op.mul(x0, vx), t);
+        var y = _Op.mul(_Op.mul(y0, vy), t);
+        var z = _Op.mul(_Op.mul(z0, vz), t);
+        return new Vector3(x, y, z);
+    }
+
+    /** todo 提供四元数类 */
+
+    var Quaternion = function (_See3D$LibraryDefineO8) {
+        _inherits(Quaternion, _See3D$LibraryDefineO8);
+
+        function Quaternion() {
+            var q0 = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : 0;
+            var q1 = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 0;
+            var q2 = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : 0;
+            var q3 = _Op.greater(arguments.length, 3) && arguments[3] !== undefined ? arguments[3] : 0;
+
+            _classCallCheck(this, Quaternion);
+
+            var _this13 = _possibleConstructorReturn(this, (Quaternion.__proto__ || Object.getPrototypeOf(Quaternion)).call(this, "Quaternion"));
+
+            _this13.q0 = q0;
+            if (_Op.equal(typeof q0 === "undefined" ? "undefined" : _typeof(q0), "object") && _Op.equal(arguments.length, 1)) {
+                // 复制构造函数
+                var q = q0;
+                _this13.q0 = q.q0;
+                _this13.qv = new Vector3(q.qv);
+            } else if (_Op.equal(arguments.length, 2)) {
+                _this13.qv = new Vector3(q1);
+            } else {
+                _this13.qv = new Vector3(q1, q2, q3);
+            }
+            return _this13;
+        }
+
+        _createClass(Quaternion, [{
+            key: "operatorAdd",
+            value: function operatorAdd(b) {
+                return new Quaternion(_Op.add(this.q0, b.q0), _Op.add(this.qv, b.qv));
+            }
+        }, {
+            key: "operatorSub",
+            value: function operatorSub(b) {
+                return new Quaternion(_Op.sub(this.q0, b.q0), _Op.sub(this.qv, b.qv));
+            }
+        }, {
+            key: "operatorMul",
+            value: function operatorMul(q) {
+                var p = this;
+                // let a = p.q0 * q.qv;
+                // let b = q.q0 * p.qv;
+                // let c = p.qv * q.qv;
+                var r = new Quaternion(_Op.sub(_Op.mul(p.q0, q.q0), _Op.mod(p.qv, q.qv)), _Op.add(_Op.add(_Op.mul(q.qv, p.q0), _Op.mul(p.qv, q.q0)), _Op.mul(p.qv, q.qv)));
+                // console.log((p.q0 * q.qv + q.q0 * p.qv + p.qv * q.qv));
+                return r;
+            }
+        }, {
+            key: "operatorDiv",
+            value: function operatorDiv(b) {
+                if (_Op.equal(typeof b === "undefined" ? "undefined" : _typeof(b), "number")) {
+                    var q = new Quaternion(this);
+                    q.q0 /= b;
+                    q.qv = _Op.div(q.qv, b);
+                    return q;
+                }
+            }
+        }, {
+            key: "inverse",
+            value: function inverse() {
+                // 加法逆元素
+                return new Quaternion(-this.q0, -this.qv.x, -this.qv.y, -this.qv.z);
+            }
+        }, {
+            key: "conjugate",
+            value: function conjugate() {
+                // 共轭四元数
+                return new Quaternion(this.q0, -this.qv.x, -this.qv.y, -this.qv.z);
+            }
+        }, {
+            key: "mod",
+            value: function mod() {
+                return Math.sqrt(_Op.add(_Op.add(_Op.add(_Op.mul(this.q0, this.q0), _Op.mul(this.qv.x, this.qv.x)), _Op.mul(this.qv.y, this.qv.y)), _Op.mul(this.qv.z, this.qv.z)));
+            }
+        }, {
+            key: "mod2",
+            value: function mod2() {
+                // 范数平方
+                return _Op.add(_Op.add(_Op.add(_Op.mul(this.q0, this.q0), _Op.mul(this.qv.x, this.qv.x)), _Op.mul(this.qv.y, this.qv.y)), _Op.mul(this.qv.z, this.qv.z));
+            }
+        }, {
+            key: "norm",
+            value: function norm() {
+                return _Op.div(this, this.mod());
+            }
+        }, {
+            key: "reciprocal",
+            value: function reciprocal() {
+                return _Op.div(this.conjugate(), this.mod2());
+            }
+        }], [{
+            key: "One",
+            value: function One() {
+                // 乘法恒等元
+                return new Quaternion(1);
+            }
+        }, {
+            key: "Zero",
+            value: function Zero() {
+                // 加法恒等元
+                return new Quaternion();
+            }
+        }]);
+
+        return Quaternion;
+    }(See3D.LibraryDefineObject);
+
     // 在库中定义所有的接口
+
+
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
     lib.define("probably", probably);
 
     lib.define("Enum", Enum);
+    lib.define("MathSet", MathSet);
+    lib.define("Interval", Interval);
 
     lib.define("Vector", Vector);
     lib.define("Vector2", Vector2);
@@ -933,8 +1237,12 @@ var _Op = function () {
     lib.define("Parmline3D", Parmline3D);
     lib.define("Plane3D", Plane3D);
     lib.define("PointPositionWithPlane", PointPositionWithPlane);
-    lib.define("intersPoints2D", intersPoints2D);
-    lib.define("intersPoints3D", intersPoints3D);
+    lib.define("intersParmlines2D", intersParmlines2D);
+    lib.define("intersParmlines3D", intersParmlines3D);
+    lib.define("intersParmlinePlane", intersParmlinePlane);
+    lib.define("intersSegmentPlane", intersSegmentPlane);
+
+    lib.define("Quaternion", Quaternion);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中

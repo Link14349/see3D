@@ -1,8 +1,15 @@
 'bpo enable';
 
+/** todo 为String类型添加方法 */
+!function () {
+    String.prototype.last = function () {
+        return this[this.length - 1];
+    };
+}();
+
+/** todo 新建一个Math3D库 */
 !function () {
     let lib = new See3D.Library("Math3D");// 生成一个新的See3D库
-
 
     /** todo 一些关于精度问题的转化 */
     // 支持的最小精度
@@ -15,6 +22,10 @@
 
     /** todo 枚举类型 */
     class Enum extends See3D.LibraryDefineObject {
+        /*
+        * 使用方法:
+        * let colors = new Enum(["RED", "WHITE", "BLACK"])
+        */
         constructor(enums) {
             super("Enum");
             let n = 0;
@@ -29,12 +40,119 @@
                 n++;
             }
         }
+
         get(n) {
             return this["$" + n];
         }
     }
 
+    /** todo 提供数学意义上的集合类 */
+    // {(token) | expr}
+    class MathSet extends See3D.LibraryDefineObject {
+        constructor(token, expr) {
+            super("MathSet");
+            if (arguments.length == 1) {// 只有一个参数
+                let str = token;
+                str = str.trim();
+                if (
+                    str.length <= 2 ||
+                    str[0] != "{" || str.last() != "}" // 不以'{'开头或不以'}'结尾
+                ) {
+                    console.error(new Error("Error 104: Illegal set string '" + str + "'"));
+                    return;
+                }
+                str = str.substring(1, str.length - 1);
+                token = "";
+
+                let splitIndex = str.search(/\|/);
+                if (splitIndex < 0) {
+                    console.error(new Error("Error 104: Illegal set string '" + str + "'"));
+                    return;
+                }
+
+                // 获取token
+                for (let i = 0; i < splitIndex; i++) {
+                    token += str[i];
+                }
+                token = token.trim();
+
+                expr = "";
+                // 获取expr
+                for (let i = splitIndex + 1; i < str.length; i++) {
+                    expr += str[i];
+                }
+            }
+            this.token = token;
+            this.expr = expr;
+        }
+        have(n) {
+            let expr = this.expr.replace(new RegExp("([^a-zA-Z_])" + this.token + "([^a-zA-Z_])", "g"), "$1" + n + "$2");
+            return Boolean(eval(expr));
+        }
+    }
+
+    /** todo 提供区间类 */
+    class Interval extends MathSet {
+        constructor(type, s, e) {
+            // super("Interval");
+            let st, et;// 存储是开还是闭
+            const token = "n";// 变量名, {x | a < x < b}
+            let expr = "";
+            let firstOp, lastOp;
+            if (arguments.length == 1) {// 只有一个参数
+                let str = type;
+                str = str.trim();
+                st = str[0];
+                et = str.last();
+
+                // 检查类型
+                if (st != "[" && st != "(") {
+                    console.error(new Error("Error 103: Illegal interval identifier '" + st + "'"));
+                    return;
+                }
+                if (et != "]" && et != ")") {
+                    console.error(new Error("Error 103: Illegal interval identifier '" + et + "'"));
+                    return;
+                }
+                str = str.substring(1, str.length - 1);
+                let numbers = str.split(",");
+                if (numbers.length < 2) str.split(/\s+/g);
+                if (st == "[") firstOp = "<=";
+                if (st == "(") firstOp = "<";
+                if (et == "]") lastOp = "<=";
+                if (et == ")") lastOp = "<";
+                s = numbers[0];
+                e = numbers[1];
+                expr = s + firstOp + token + " && " + token + lastOp + e;
+                // this.st = st;
+                // this.et = et;
+                // this.s = numbers[0];// 区间的第一个数
+                // this.e = numbers[1];// 区间的第二个数
+            } else {
+                st = type[0];
+                et = type[1];
+                // 检查类型
+                if (st != "[" && st != "(") {
+                    console.error(new Error("Error 103: Illegal interval identifier '" + st + "'"));
+                    return;
+                }
+                if (et != "]" && et != ")") {
+                    console.error(new Error("Error 103: Illegal interval identifier '" + et + "'"));
+                    return;
+                }
+                if (st == "[") firstOp = "<=";
+                if (st == "(") firstOp = "<";
+                if (et == "]") lastOp = "<=";
+                if (et == ")") lastOp = "<";
+                // console.log(firstOp, lastOp, s, e);
+                expr = String(s) + firstOp + token + " && " + token + lastOp + String(e);
+            }
+            super(token, expr);
+        }
+    }
+
     /** todo 向量类 */
+    // WARNING: %代表点积, *代表叉乘
     class Vector extends See3D.LibraryDefineObject {
         constructor(arr) {
             super("Vector");
@@ -144,7 +262,6 @@
                 return tmp;
             } else {
                 // 叉乘
-                // console.error(new Error("Error 102: Do not support scalar and vector for dot div operations"));
                 let a = new Matrix(this.length, 1, [this.array]);
                 let arr = [];
                 for (let i = 0; i < b.length; i++) {
@@ -491,7 +608,7 @@
 
 
     /** todo 计算两参数化2D线段的交点 */
-    function intersPoints2D(pl1, pl2) {
+    function intersParmlines2D(pl1, pl2) {
         let p0 = pl1.p0;
         let p2 = pl2.p0;
         let a = p0.x, b = p0.y, c = p2.x, d = p2.y;
@@ -514,7 +631,7 @@
         return new Vector2(x, y);
     }
     /** todo 计算两参数化3D线段的交点 */
-    function intersPoints3D(pl1, pl2) {
+    function intersParmlines3D(pl1, pl2) {
         let p0 = pl1.p0;
         let p2 = pl2.p0;
         let a = p0.x, b = p0.y, c = p2.x, d = p2.y;
@@ -538,12 +655,126 @@
         return new Vector3(x, y, z);
     }
 
+    const tInterval = new Interval("[0, 1]");
+
+    /** todo 计算参数化直线与平面的交点 */
+    function intersParmlinePlane(plane, parmline) {
+        // console.log(parmline);
+        let {x: x0, y: y0, z: z0} = parmline.p0;
+        let {x: vx, y: vy, z: vz} = parmline.v;
+        let {x: a, y: b, z: c} = plane.n;
+        let d = -a * x0 - b * y0 - c * z0;
+        let t =
+            -(a * x0 + b * y0 + c * z0 + d)
+            /
+            (a * vx + b * vy + c * vz)
+        ;
+        let x = x0 * vx * t;
+        let y = y0 * vy * t;
+        let z = z0 * vz * t;
+        return new Vector3(x, y, z);
+    }
+    /** todo 计算参数化线段与平面的交点 */
+    function intersSegmentPlane(parmline, plane) {
+        let {x: x0, y: y0, z: z0} = parmline.p0;
+        let {x: vx, y: vy, z: vz} = parmline.v;
+        let {x: a, y: b, z: c} = plane.n;
+        let d = -a * x0 - b * y0 - c * z0;
+        let t =
+            -(a * x0 + b * y0 + c * z0 + d)
+            /
+            (a * vx + b * vy + c * vz)
+        ;
+        if (!tInterval.have(t)) return null;
+        let x = x0 * vx * t;
+        let y = y0 * vy * t;
+        let z = z0 * vz * t;
+        return new Vector3(x, y, z);
+    }
+
+    /** todo 提供四元数类 */
+    class Quaternion extends See3D.LibraryDefineObject {
+        constructor(q0 = 0, q1 = 0, q2 = 0, q3 = 0) {
+            super("Quaternion");
+            this.q0 = q0;
+            if (typeof q0 == "object" && arguments.length == 1) {// 复制构造函数
+                let q = q0;
+                this.q0 = q.q0;
+                this.qv = new Vector3(q.qv);
+            } else if (arguments.length == 2) {
+                this.qv = new Vector3(q1);
+            } else {
+                this.qv = new Vector3(q1, q2, q3);
+            }
+        }
+        operatorAdd(b) {
+            return new Quaternion(this.q0 + b.q0, this.qv + b.qv);
+        }
+        operatorSub(b) {
+            return new Quaternion(this.q0 - b.q0, this.qv - b.qv);
+        }
+        operatorMul(q) {
+            let p = this;
+            // let a = p.q0 * q.qv;
+            // let b = q.q0 * p.qv;
+            // let c = p.qv * q.qv;
+            let r = new Quaternion(
+                p.q0 * q.q0 - (p.qv % q.qv),
+                (q.qv * p.q0 + p.qv * q.q0 + p.qv * q.qv)
+            );
+            // console.log((p.q0 * q.qv + q.q0 * p.qv + p.qv * q.qv));
+            return r;
+        }
+        operatorDiv(b) {
+            if (typeof b == "number") {
+                let q = new Quaternion(this);
+                q.q0 /= b;
+                q.qv = q.qv / b;
+                return q;
+            }
+        }
+        inverse() {// 加法逆元素
+            return new Quaternion(-this.q0, -this.qv.x, -this.qv.y, -this.qv.z);
+        }
+        conjugate() {// 共轭四元数
+            return new Quaternion(this.q0, -this.qv.x, -this.qv.y, -this.qv.z);
+        }
+        mod() {
+            return Math.sqrt(
+                this.q0 * this.q0 +
+                this.qv.x * this.qv.x +
+                this.qv.y * this.qv.y +
+                this.qv.z * this.qv.z
+            );
+        }
+        mod2() {// 范数平方
+            return this.q0 * this.q0 +
+                this.qv.x * this.qv.x +
+                this.qv.y * this.qv.y +
+                this.qv.z * this.qv.z;
+        }
+        norm() {
+            return this / this.mod();
+        }
+        reciprocal() {
+            return this.conjugate() / this.mod2();
+        }
+        static One() {// 乘法恒等元
+            return new Quaternion(1);
+        }
+        static Zero() {// 加法恒等元
+            return new Quaternion();
+        }
+    }
+
     // 在库中定义所有的接口
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
     lib.define("probably", probably);
 
     lib.define("Enum", Enum);
+    lib.define("MathSet", MathSet);
+    lib.define("Interval", Interval);
 
     lib.define("Vector", Vector);
     lib.define("Vector2", Vector2);
@@ -557,8 +788,12 @@
     lib.define("Parmline3D", Parmline3D);
     lib.define("Plane3D", Plane3D);
     lib.define("PointPositionWithPlane", PointPositionWithPlane);
-    lib.define("intersPoints2D", intersPoints2D);
-    lib.define("intersPoints3D", intersPoints3D);
+    lib.define("intersParmlines2D", intersParmlines2D);
+    lib.define("intersParmlines3D", intersParmlines3D);
+    lib.define("intersParmlinePlane", intersParmlinePlane);
+    lib.define("intersSegmentPlane", intersSegmentPlane);
+
+    lib.define("Quaternion", Quaternion);
 
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中

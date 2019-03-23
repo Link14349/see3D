@@ -74,30 +74,17 @@ var _Op = function () {
   };
 }();
 
-console.log("=======Math Graph Test=======");
-console.time("MathGraph");
+console.log("======MathSet Test======");
+console.time("MathSet");
 
-var parmline2d = new Parmline2D(Vector2.Zero(), new Vector2(1, 1));
-var parmline3d = new Parmline3D(Vector3.Zero(), new Vector3(1, 1, 1));
-var plane3d = new Plane3D(new Vector3(0, 1, 0), Vector3.Zero());
-var point = new Vector3(1, -1, 1);
-console.log(parmline2d);
-console.log(parmline3d);
-console.log(plane3d);
-console.log(PointPositionWithPlane(point, plane3d));
+var R1 = new MathSet("{ n | -Infinity <= n && n <= +Infinity }");
+var R2 = new MathSet("n", "-Infinity <= n && n <= +Infinity");
+var R3 = new Interval("[]", -Infinity, +Infinity);
+console.log(R1, R2, R3);
+console.log(R1.have(0), R1.have(-100), R1.have(100), R1.have(-Infinity), R1.have(+Infinity));
+console.log(R2.have(0), R2.have(-100), R2.have(100), R2.have(-Infinity), R2.have(+Infinity));
+console.log(R3.have(0), R3.have(-100), R3.have(100), R3.have(-Infinity), R3.have(+Infinity));
 
-var p012d = new Parmline2D(new Vector2(1, 1), new Vector2(8, 5));
-var p232d = new Parmline2D(new Vector2(3, 6), new Vector2(8, 3));
-console.log(intersParmlines2D(p012d, p232d));
-
-var p013d = new Parmline3D(new Vector3(1, 1), new Vector3(8, 5));
-var p233d = new Parmline2D(new Vector3(3, 6), new Vector3(8, 3));
-console.log(intersParmlines3D(p013d, p233d));
-
-var plane = new Plane3D(new Vector3(0, 1, 0), Vector3.Zero());
-var parmline = new Parmline3D(new Vector3(0, -1, 0), new Vector3(0, 1, 0));
-console.log(intersParmlinePlane(plane, parmline));
-
-console.timeEnd("MathGraph");
-console.log("=====Math Graph Test End=====");
-//# sourceMappingURL=MathGraph.js.map
+console.timeEnd("MathSet");
+console.log("====MathSet Test End====");
+//# sourceMappingURL=MathSet.js.map

@@ -74,30 +74,24 @@ var _Op = function () {
   };
 }();
 
-console.log("=======Math Graph Test=======");
-console.time("MathGraph");
+console.log("=======Quaternion Test=======");
+console.time("Quaternion");
 
-var parmline2d = new Parmline2D(Vector2.Zero(), new Vector2(1, 1));
-var parmline3d = new Parmline3D(Vector3.Zero(), new Vector3(1, 1, 1));
-var plane3d = new Plane3D(new Vector3(0, 1, 0), Vector3.Zero());
-var point = new Vector3(1, -1, 1);
-console.log(parmline2d);
-console.log(parmline3d);
-console.log(plane3d);
-console.log(PointPositionWithPlane(point, plane3d));
+var a = new Quaternion(1, 2, 3, 4);
+var b = new Quaternion(1, 2, 3, 4);
+var c = _Op.add(a, b);
+var d = _Op.mul(a, b);
+console.log(c);
+console.log(d);
+console.log(a.inverse());
+console.log(a.conjugate());
+console.log(_Op.mul(a, a.conjugate()));
+console.log(a.mod());
+console.log(a.mod2());
+console.log(a.norm());
+console.log(a.reciprocal());
+console.log(_Op.mul(a, a.reciprocal()));
 
-var p012d = new Parmline2D(new Vector2(1, 1), new Vector2(8, 5));
-var p232d = new Parmline2D(new Vector2(3, 6), new Vector2(8, 3));
-console.log(intersParmlines2D(p012d, p232d));
-
-var p013d = new Parmline3D(new Vector3(1, 1), new Vector3(8, 5));
-var p233d = new Parmline2D(new Vector3(3, 6), new Vector3(8, 3));
-console.log(intersParmlines3D(p013d, p233d));
-
-var plane = new Plane3D(new Vector3(0, 1, 0), Vector3.Zero());
-var parmline = new Parmline3D(new Vector3(0, -1, 0), new Vector3(0, 1, 0));
-console.log(intersParmlinePlane(plane, parmline));
-
-console.timeEnd("MathGraph");
-console.log("=====Math Graph Test End=====");
-//# sourceMappingURL=MathGraph.js.map
+console.timeEnd("Quaternion");
+console.log("=====Quaternion Test End=====");
+//# sourceMappingURL=Quaternion.js.map

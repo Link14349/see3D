@@ -14,11 +14,15 @@ console.log(PointPositionWithPlane(point, plane3d));
 
 let p012d = new Parmline2D(new Vector2(1, 1), new Vector2(8, 5));
 let p232d = new Parmline2D(new Vector2(3, 6), new Vector2(8, 3));
-console.log(intersPoints2D(p012d, p232d));
+console.log(intersParmlines2D(p012d, p232d));
 
 let p013d = new Parmline3D(new Vector3(1, 1), new Vector3(8, 5));
 let p233d = new Parmline2D(new Vector3(3, 6), new Vector3(8, 3));
-console.log(intersPoints3D(p013d, p233d));
+console.log(intersParmlines3D(p013d, p233d));
+
+let plane = new Plane3D(new Vector3(0, 1, 0), Vector3.Zero());
+let parmline = new Parmline3D(new Vector3(0, -1, 0), new Vector3(0, 1, 0));
+console.log(intersParmlinePlane(plane, parmline));
 
 console.timeEnd("MathGraph");
 console.log("=====Math Graph Test End=====");
