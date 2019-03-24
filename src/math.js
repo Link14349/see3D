@@ -543,6 +543,80 @@
         static Zero(w, h) {
             return new Matrix(w, h);
         }
+        static TransMove(d) {
+            return new Matrix(4, 4, [
+                [1,   0,   0,   0],
+                [0,   1,   0,   0],
+                [0,   0,   1,   0],
+                [d.x, d.y, d.z, 0],
+            ]);
+        }
+        static TransMoveInverse(d) {
+            return new Matrix(4, 4, [
+                [1,    0,    0,    0],
+                [0,    1,    0,    0],
+                [0,    0,    1,    0],
+                [-d.x, -d.y, -d.z, 0],
+            ]);
+        }
+        static TransScale(s) {
+            return new Matrix(4, 4, [
+                [s.x, 0,   0,   0],
+                [0,   s.y, 0,   0],
+                [0,   0,   s.z, 0],
+                [0,   0,   0,   1],
+            ]);
+        }
+        static TransScaleInverse(s) {
+            return new Matrix(4, 4, [
+                [1 / s.x, 0,       0,       0],
+                [0,       1 / s.y, 0,       0],
+                [0,       0,       1 / s.z, 0],
+                [0,       0,       0,       1],
+            ]);
+        }
+        static TransRotate(s) {
+            let Mx = new Matrix(4, 4, [
+                [1, 0,              0,             0],
+                [0, Math.cos(s.x),  Math.sin(s.x), 0],
+                [0, -Math.sin(s.x), Math.cos(s.x), 0],
+                [0, 0,              0,             1],
+            ]);
+            let My = new Matrix(4, 4, [
+                [Math.cos(s.y), 0, -Math.sin(s.y), 0],
+                [0,             1, 0,              0],
+                [Math.sin(s.y), 0, Math.cos(s.y),  0],
+                [0,             0, 0,              1],
+            ]);
+            let Mz = new Matrix(4, 4, [
+                [Math.cos(s.z),  Math.sin(s.z), 0, 0],
+                [-Math.sin(s.z), Math.cos(s.z), 0, 0],
+                [0,              0            , 1, 0],
+                [0,              0            , 0, 1],
+            ]);
+            return Mx * My * Mz;
+        }
+        static TransRotateInverse(s) {
+            let Mx = new Matrix(4, 4, [
+                [1, 0,              0,              0],
+                [0, Math.cos(s.x),  -Math.sin(s.x), 0],
+                [0, Math.sin(s.x),  Math.cos(s.x),  0],
+                [0, 0,              0,              1],
+            ]);
+            let My = new Matrix(4, 4, [
+                [Math.cos(s.y), 0, Math.sin(s.y),   0],
+                [0,             1, 0,               0],
+                [-Math.sin(s.y), 0, Math.cos(s.y),  0],
+                [0,             0, 0,               1],
+            ]);
+            let Mz = new Matrix(4, 4, [
+                [Math.cos(s.z),  -Math.sin(s.z), 0, 0],
+                [Math.sin(s.z), Math.cos(s.z),   0, 0],
+                [0,              0,              1, 0],
+                [0,              0,              0, 1],
+            ]);
+            return Mx * My * Mz;
+        }
     }
     class Matrix2x2 extends Matrix {
         constructor(fill) {
@@ -765,7 +839,7 @@
         norm() {
             return this / this.mod();
         }
-        reciprocal() {
+        reciprocal() {// 倒数
             return this.conjugate() / this.mod2();
         }
         static One() {// 乘法恒等元
@@ -773,6 +847,38 @@
         }
         static Zero() {// 加法恒等元
             return new Quaternion();
+        }
+        static RotateLine(v, theta, type) {// type为true是顺时针, 否则为逆时针
+            let V = new Quaternion(0, new Vector3(v));
+            let q = new Quaternion(
+                Math.cos(theta / 2),
+                Math.sin(theta / 2) * V.qv
+            );
+            if (type) {
+                return q * V.qv * q.reciprocal();
+            }
+            return q.reciprocal() * V.qv * q;
+        }
+        static RotateQuaternion(r) {
+            let x = this.__Q_x_theta(r.x);
+            let y = this.__Q_y_theta(r.y);
+            let z = this.__Q_z_theta(r.z);
+            return (z.Q_z_theta * y.Q_y_theta * x.Q_x_theta);
+        }
+        static __Q_x_theta(theta) {
+            let Q_x_theta = new Quaternion(Math.cos(theta / 2), Math.sin(theta / 2), 0, 0);
+            let q_theta = Math.cos(theta / 2), q_v = new Vector3(Math.sin(theta / 2), 0, 0);
+            return {Q_x_theta, q_theta, q_v};
+        }
+        static __Q_y_theta(theta) {
+            let Q_y_theta = new Quaternion(Math.cos(theta / 2), 0, Math.sin(theta / 2), 0);
+            let q_theta = Math.cos(theta / 2), q_v = new Vector3(0, Math.sin(theta / 2), 0);
+            return {Q_y_theta, q_theta, q_v};
+        }
+        static __Q_z_theta(theta) {
+            let Q_z_theta = new Quaternion(Math.cos(theta / 2), 0, 0, Math.sin(theta / 2));
+            let q_theta = Math.cos(theta / 2), q_v = new Vector3(0, 0, Math.sin(theta / 2));
+            return {Q_z_theta, q_theta, q_v};
         }
     }
 

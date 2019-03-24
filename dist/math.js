@@ -892,6 +892,42 @@ var _Op = function () {
             value: function Zero(w, h) {
                 return new Matrix(w, h);
             }
+        }, {
+            key: "TransMove",
+            value: function TransMove(d) {
+                return new Matrix(4, 4, [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [d.x, d.y, d.z, 0]]);
+            }
+        }, {
+            key: "TransMoveInverse",
+            value: function TransMoveInverse(d) {
+                return new Matrix(4, 4, [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [-d.x, -d.y, -d.z, 0]]);
+            }
+        }, {
+            key: "TransScale",
+            value: function TransScale(s) {
+                return new Matrix(4, 4, [[s.x, 0, 0, 0], [0, s.y, 0, 0], [0, 0, s.z, 0], [0, 0, 0, 1]]);
+            }
+        }, {
+            key: "TransScaleInverse",
+            value: function TransScaleInverse(s) {
+                return new Matrix(4, 4, [[_Op.div(1, s.x), 0, 0, 0], [0, _Op.div(1, s.y), 0, 0], [0, 0, _Op.div(1, s.z), 0], [0, 0, 0, 1]]);
+            }
+        }, {
+            key: "TransRotate",
+            value: function TransRotate(s) {
+                var Mx = new Matrix(4, 4, [[1, 0, 0, 0], [0, Math.cos(s.x), Math.sin(s.x), 0], [0, -Math.sin(s.x), Math.cos(s.x), 0], [0, 0, 0, 1]]);
+                var My = new Matrix(4, 4, [[Math.cos(s.y), 0, -Math.sin(s.y), 0], [0, 1, 0, 0], [Math.sin(s.y), 0, Math.cos(s.y), 0], [0, 0, 0, 1]]);
+                var Mz = new Matrix(4, 4, [[Math.cos(s.z), Math.sin(s.z), 0, 0], [-Math.sin(s.z), Math.cos(s.z), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+                return _Op.mul(_Op.mul(Mx, My), Mz);
+            }
+        }, {
+            key: "TransRotateInverse",
+            value: function TransRotateInverse(s) {
+                var Mx = new Matrix(4, 4, [[1, 0, 0, 0], [0, Math.cos(s.x), -Math.sin(s.x), 0], [0, Math.sin(s.x), Math.cos(s.x), 0], [0, 0, 0, 1]]);
+                var My = new Matrix(4, 4, [[Math.cos(s.y), 0, Math.sin(s.y), 0], [0, 1, 0, 0], [-Math.sin(s.y), 0, Math.cos(s.y), 0], [0, 0, 0, 1]]);
+                var Mz = new Matrix(4, 4, [[Math.cos(s.z), -Math.sin(s.z), 0, 0], [Math.sin(s.z), Math.cos(s.z), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+                return _Op.mul(_Op.mul(Mx, My), Mz);
+            }
         }]);
 
         return Matrix;
@@ -1201,6 +1237,7 @@ var _Op = function () {
         }, {
             key: "reciprocal",
             value: function reciprocal() {
+                // 倒数
                 return _Op.div(this.conjugate(), this.mod2());
             }
         }], [{
@@ -1214,6 +1251,49 @@ var _Op = function () {
             value: function Zero() {
                 // 加法恒等元
                 return new Quaternion();
+            }
+        }, {
+            key: "RotateLine",
+            value: function RotateLine(v, theta, type) {
+                // type为true是顺时针, 否则为逆时针
+                var V = new Quaternion(0, new Vector3(v));
+                var q = new Quaternion(Math.cos(_Op.div(theta, 2)), _Op.mul(Math.sin(_Op.div(theta, 2)), V.qv));
+                if (type) {
+                    return _Op.mul(_Op.mul(q, V.qv), q.reciprocal());
+                }
+                return _Op.mul(_Op.mul(q.reciprocal(), V.qv), q);
+            }
+        }, {
+            key: "RotateQuaternion",
+            value: function RotateQuaternion(r) {
+                var x = this.__Q_x_theta(r.x);
+                var y = this.__Q_y_theta(r.y);
+                var z = this.__Q_z_theta(r.z);
+                return _Op.mul(_Op.mul(z.Q_z_theta, y.Q_y_theta), x.Q_x_theta);
+            }
+        }, {
+            key: "__Q_x_theta",
+            value: function __Q_x_theta(theta) {
+                var Q_x_theta = new Quaternion(Math.cos(_Op.div(theta, 2)), Math.sin(_Op.div(theta, 2)), 0, 0);
+                var q_theta = Math.cos(_Op.div(theta, 2)),
+                    q_v = new Vector3(Math.sin(_Op.div(theta, 2)), 0, 0);
+                return { Q_x_theta: Q_x_theta, q_theta: q_theta, q_v: q_v };
+            }
+        }, {
+            key: "__Q_y_theta",
+            value: function __Q_y_theta(theta) {
+                var Q_y_theta = new Quaternion(Math.cos(_Op.div(theta, 2)), 0, Math.sin(_Op.div(theta, 2)), 0);
+                var q_theta = Math.cos(_Op.div(theta, 2)),
+                    q_v = new Vector3(0, Math.sin(_Op.div(theta, 2)), 0);
+                return { Q_y_theta: Q_y_theta, q_theta: q_theta, q_v: q_v };
+            }
+        }, {
+            key: "__Q_z_theta",
+            value: function __Q_z_theta(theta) {
+                var Q_z_theta = new Quaternion(Math.cos(_Op.div(theta, 2)), 0, 0, Math.sin(_Op.div(theta, 2)));
+                var q_theta = Math.cos(_Op.div(theta, 2)),
+                    q_v = new Vector3(0, 0, Math.sin(_Op.div(theta, 2)));
+                return { Q_z_theta: Q_z_theta, q_theta: q_theta, q_v: q_v };
             }
         }]);
 
