@@ -1036,7 +1036,9 @@
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中
     See3D.load("Math3D");// 将库加入See3D的默认加载队列
-    if (See3D.DEBUG) See3D.loadGlobal("Math3D");
-    if (See3D.DEBUG) lib.global();
+    if (See3D.DEBUG) {
+        See3D.loadGlobal("Math3D");// 将库加入浏览器全局
+        lib.global();// 将库API加入浏览器全局
+    }
     See3D.lib("Math3D");
 }();
