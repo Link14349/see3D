@@ -27,7 +27,7 @@ class See3D {
         this.loadGlobal();
         this.bindLibrary("IO");
         this.bindLibrary("Math3D");
-        this.sout = new See3D.IO.$sostream(this);
+        this.sout = new See3D.IO.sostream(this);
     }
     width(w) {
         if (w === void(0)) {
@@ -151,7 +151,7 @@ class See3D {
         }
         trans() {
             for (let i in this.defines) {
-                this["$" + i] = this.defines[i];
+                this[i] = this.defines[i];
             }
         }
         global() {

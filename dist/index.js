@@ -110,7 +110,7 @@ var See3D = function () {
         this.loadGlobal();
         this.bindLibrary("IO");
         this.bindLibrary("Math3D");
-        this.sout = new See3D.IO.$sostream(this);
+        this.sout = new See3D.IO.sostream(this);
     }
 
     _createClass(See3D, [{
@@ -297,7 +297,7 @@ var See3D = function () {
             key: "trans",
             value: function trans() {
                 for (var i in this.defines) {
-                    this["$" + i] = this.defines[i];
+                    this[i] = this.defines[i];
                 }
             }
         }, {
