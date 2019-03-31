@@ -275,7 +275,7 @@
                 }
                 if (b.type == "Matrix") {
                     let selfMatrix = new Matrix(this.length, 1, [this.array]);
-                    console.log(selfMatrix, b);
+                    // console.log(selfMatrix, b);
                     let res = selfMatrix * b;
                     return new Vector(res.array[0]);
                 }

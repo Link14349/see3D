@@ -489,7 +489,7 @@ var _Op = function () {
                     }
                     if (_Op.equal(b.type, "Matrix")) {
                         var selfMatrix = new Matrix(this.length, 1, [this.array]);
-                        console.log(selfMatrix, b);
+                        // console.log(selfMatrix, b);
                         var res = _Op.mul(selfMatrix, b);
                         return new Vector(res.array[0]);
                     }
