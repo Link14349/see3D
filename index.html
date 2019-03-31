@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>See3D</title>
-    <script type="text/javascript" src="release/See3D.min.js"></script>
-    <!--<script type="text/javascript" src="dist/index.js"></script>-->
-    <!--<script type="text/javascript" src="dist/IO.js"></script>-->
-    <!--<script type="text/javascript" src="dist/math.js"></script>-->
+    <!--<script type="text/javascript" src="release/See3D.min.js"></script>-->
+    <script type="text/javascript" src="dist/index.js"></script>
+    <script type="text/javascript" src="dist/IO.js"></script>
+    <script type="text/javascript" src="dist/math.js"></script>
+    <script type="text/javascript" src="dist/item.js"></script>
 
     <!--Tests-->
     <script type="text/javascript">
         console.time("Tests");
     </script>
-    <script type="text/javascript" src="dist/tests/Vector.js"></script>
-    <script type="text/javascript" src="dist/tests/Matrix.js"></script>
-    <script type="text/javascript" src="dist/tests/MathSet.js"></script>
-    <script type="text/javascript" src="dist/tests/MathGraph.js"></script>
-    <script type="text/javascript" src="dist/tests/Quaternion.js"></script>
-    <script type="text/javascript" src="dist/tests/TransPosition.js"></script>
+    <!--<script type="text/javascript" src="dist/tests/Vector.js"></script>-->
+    <!--<script type="text/javascript" src="dist/tests/Matrix.js"></script>-->
+    <!--<script type="text/javascript" src="dist/tests/MathSet.js"></script>-->
+    <!--<script type="text/javascript" src="dist/tests/MathGraph.js"></script>-->
+    <!--<script type="text/javascript" src="dist/tests/Quaternion.js"></script>-->
+    <!--<script type="text/javascript" src="dist/tests/TransPosition.js"></script>-->
     <style>
         * {
             padding: 0;
@@ -39,7 +40,21 @@
 <canvas id="canvas"></canvas>
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
+    let scene = new See3D.Scene("scene", game);
+    let camera = new See3D.Camera(See3D.Vector3.Zero(), See3D.Vector3.Zero(), "camera", scene);
+    let point = new See3D.Point(new See3D.Vector3(10, 10, 10));
+    scene
+        .push(camera)
+        .camera("camera")
+        .push(point)
+    ;
+    game
+        .push(scene)
+        .scene("scene")
+    ;
     game.full();
+    // game.renderLoop();
+    game.render();
 </script>
 
 <!--Tests-->

@@ -111,6 +111,8 @@ var See3D = function () {
         this.bindLibrary("IO");
         this.bindLibrary("Math3D");
         this.sout = new See3D.IO.sostream(this);
+        this.__scenes = {};
+        this.use = null;
     }
 
     _createClass(See3D, [{
@@ -135,6 +137,63 @@ var See3D = function () {
         key: "full",
         value: function full() {
             this.width(window.innerWidth).height(window.innerHeight);
+            return this;
+        }
+    }, {
+        key: "push",
+        value: function push(s) {
+            this.__scenes[s.name] = s;
+            if (!this.use) this.use = s;
+            return this;
+        }
+    }, {
+        key: "scene",
+        value: function scene(n) {
+            this.use = this.__scenes[n];
+            return this;
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            if (this.use) {
+                this.use.render();
+            } else {
+                this.noView();
+            }
+            return this;
+        }
+    }, {
+        key: "renderLoop",
+        value: function renderLoop(PhyFun, ViewFun) {
+            var self = this;
+            requestAnimationFrame(function cb() {
+                if (PhyFun) PhyFun(); // 物理
+                var _self$dom = self.dom,
+                    width = _self$dom.width,
+                    height = _self$dom.height;
+
+                self.ctx.clearRect(0, 0, width, height);
+                self.render();
+                if (ViewFun) ViewFun(); // 视角
+                requestAnimationFrame(cb);
+            });
+        }
+    }, {
+        key: "noView",
+        value: function noView() {
+            var ctx = this.ctx;
+            var _dom = this.dom,
+                width = _dom.width,
+                height = _dom.height;
+
+            ctx.beginPath();
+            ctx.fillStyle = "#333";
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.font = "50px Georgia";
+            ctx.fillText("No View", width / 2, height / 2);
+            ctx.closePath();
             return this;
         }
         /**
@@ -250,7 +309,7 @@ var See3D = function () {
     return See3D;
 }();
 
-!function () {
+!function (See3D) {
     See3D.version = "v0.0.1";
     console.log("See3D engine (%s) launched", See3D.version);
     See3D.DEBUG = true;
@@ -301,6 +360,13 @@ var See3D = function () {
                 }
             }
         }, {
+            key: "toSee3D",
+            value: function toSee3D() {
+                for (var i in this.defines) {
+                    See3D[i] = this.defines[i];
+                }
+            }
+        }, {
             key: "global",
             value: function global() {
                 for (var i in this.defines) {
@@ -341,5 +407,5 @@ var See3D = function () {
     See3D.LibraryDefineObject = LibraryDefineObject;
     See3D.checkType = checkType;
     See3D.translate = translate;
-}();
+}(See3D);
 //# sourceMappingURL=index.js.map

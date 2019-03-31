@@ -88,6 +88,12 @@ console.log(c.inverse());
 var d = new Matrix(a);
 console.log(d);
 
+var t = a;
+for (var i = 0; _Op.less(i, 100); i++) {
+    t = _Op.mul(t, b);
+}
+console.log(t);
+
 console.timeEnd("Matrix");
 console.log("=======Matrix Test End=======");
 //# sourceMappingURL=Matrix.js.map

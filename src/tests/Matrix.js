@@ -18,5 +18,11 @@ console.log(c.inverse());
 let d = new Matrix(a);
 console.log(d);
 
+let t = a;
+for (let i = 0; i < 100; i++) {
+    t = t * b;
+}
+console.log(t);
+
 console.timeEnd("Matrix");
 console.log("=======Matrix Test End=======");

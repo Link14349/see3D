@@ -8,7 +8,7 @@
 }();
 
 /** todo 新建一个Math3D库 */
-!function () {
+!function (See3D) {
     let lib = new See3D.Library("Math3D");// 生成一个新的See3D库
 
     /** todo 一些关于精度问题的转化 */
@@ -262,15 +262,23 @@
                 return tmp;
             } else {
                 // 叉乘
-                let a = new Matrix(this.length, 1, [this.array]);
-                let arr = [];
-                for (let i = 0; i < b.length; i++) {
-                    arr.push([b.array[i]]);
+                if (b.type == "Vector") {
+                    let a = new Matrix(this.length, 1, [this.array]);
+                    let arr = [];
+                    for (let i = 0; i < b.length; i++) {
+                        arr.push([b.array[i]]);
+                    }
+                    b = new Matrix(1, b.length, arr);
+                    // console.log(a);
+                    // console.log(b);
+                    return a * b;
                 }
-                b = new Matrix(1, b.length, arr);
-                // console.log(a);
-                // console.log(b);
-                return a * b;
+                if (b.type == "Matrix") {
+                    let selfMatrix = new Matrix(this.length, 1, [this.array]);
+                    console.log(selfMatrix, b);
+                    let res = selfMatrix * b;
+                    return new Vector(res.array[0]);
+                }
             }
         }
         operatorBinaryXor(b) {
@@ -507,22 +515,27 @@
         operatorMul(b) {
             // console.log(this.size() == b.size());
             if (typeof b == "object") {
-                if (this.w != b.h) {
-                    console.error(new Error("Error 100: Matrix size does not match"));
-                    return null;
-                }
-                let n = this.w;
-                let c = new Matrix(this.h, b.w, 0);
-                for (let i = 0; i < this.h; i++) {
-                    for (let j = 0; j < b.w; j++) {
-                        let sum = 0;
-                        for (let k = 0; k < n; k++) {
-                            sum += this.array[i][k] * b.array[k][j];
-                        }
-                        c.array[i][j] = sum;
+                if (b.type == "Matrix") {
+                    if (this.w != b.h) {
+                        console.error(new Error("Error 100: Matrix size does not match"));
+                        return null;
                     }
+                    let n = this.w;
+                    let c = new Matrix(this.h, b.w, 0);
+                    for (let i = 0; i < this.h; i++) {
+                        for (let j = 0; j < b.w; j++) {
+                            let sum = 0;
+                            for (let k = 0; k < n; k++) {
+                                sum += this.array[i][k] * b.array[k][j];
+                            }
+                            c.array[i][j] = sum;
+                        }
+                    }
+                    return c;
                 }
-                return c;
+                // if (b.type == "Vector") {
+                //
+                // }
             } else {
                 let c = new Matrix(this.w, this.h, [].concat(this.array));
                 for (let i = 0; i < this.h; i++) {
@@ -1036,9 +1049,8 @@
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中
     See3D.load("Math3D");// 将库加入See3D的默认加载队列
-    if (See3D.DEBUG) {
-        See3D.loadGlobal("Math3D");// 将库加入浏览器全局
-        lib.global();// 将库API加入浏览器全局
-    }
+    See3D.loadGlobal("Math3D");// 将库加入浏览器全局
+    lib.global();// 将库API加入浏览器全局
     See3D.lib("Math3D");
-}();
+    lib.toSee3D();
+}(See3D);

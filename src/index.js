@@ -28,6 +28,8 @@ class See3D {
         this.bindLibrary("IO");
         this.bindLibrary("Math3D");
         this.sout = new See3D.IO.sostream(this);
+        this.__scenes = {};
+        this.use = null;
     }
     width(w) {
         if (w === void(0)) {
@@ -48,6 +50,47 @@ class See3D {
             .width(window.innerWidth)
             .height(window.innerHeight)
         ;
+        return this;
+    }
+    push(s) {
+        this.__scenes[s.name] = s;
+        if (!this.use) this.use = s;
+        return this;
+    }
+    scene(n) {
+        this.use = this.__scenes[n];
+        return this;
+    }
+    render() {
+        if (this.use) {
+            this.use.render();
+        } else {
+            this.noView();
+        }
+        return this;
+    }
+    renderLoop(PhyFun, ViewFun) {
+        let self = this;
+        requestAnimationFrame(function cb() {
+            if (PhyFun) PhyFun();// 物理
+            let {width, height} = self.dom;
+            self.ctx.clearRect(0, 0, width, height);
+            self.render();
+            if (ViewFun) ViewFun();// 视角
+            requestAnimationFrame(cb);
+        });
+    }
+    noView() {
+        let ctx = this.ctx;
+        let {width, height} = this.dom;
+        ctx.beginPath();
+        ctx.fillStyle = "#333";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.font = "50px Georgia";
+        ctx.fillText("No View", width / 2, height / 2);
+        ctx.closePath();
         return this;
     }
     /**
@@ -114,7 +157,7 @@ class See3D {
     }
 }
 
-!function () {
+!function (See3D) {
     See3D.version = "v0.0.1";
     console.log("See3D engine (%s) launched", See3D.version);
     See3D.DEBUG = true;
@@ -154,6 +197,11 @@ class See3D {
                 this[i] = this.defines[i];
             }
         }
+        toSee3D() {
+            for (let i in this.defines) {
+                See3D[i] = this.defines[i];
+            }
+        }
         global() {
             for (let i in this.defines) {
                 globalThis[i] = this.defines[i];
@@ -179,4 +227,4 @@ class See3D {
     See3D.LibraryDefineObject = LibraryDefineObject;
     See3D.checkType = checkType;
     See3D.translate = translate;
-}();
+}(See3D);

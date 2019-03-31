@@ -95,7 +95,7 @@ var _Op = function () {
 }();
 
 /** todo 新建一个Math3D库 */
-!function () {
+!function (See3D) {
     var lib = new See3D.Library("Math3D"); // 生成一个新的See3D库
 
     /** todo 一些关于精度问题的转化 */
@@ -476,15 +476,23 @@ var _Op = function () {
                     return tmp;
                 } else {
                     // 叉乘
-                    var a = new Matrix(this.length, 1, [this.array]);
-                    var arr = [];
-                    for (var _i6 = 0; _Op.less(_i6, b.length); _i6++) {
-                        arr.push([b.array[_i6]]);
+                    if (_Op.equal(b.type, "Vector")) {
+                        var a = new Matrix(this.length, 1, [this.array]);
+                        var arr = [];
+                        for (var _i6 = 0; _Op.less(_i6, b.length); _i6++) {
+                            arr.push([b.array[_i6]]);
+                        }
+                        b = new Matrix(1, b.length, arr);
+                        // console.log(a);
+                        // console.log(b);
+                        return _Op.mul(a, b);
                     }
-                    b = new Matrix(1, b.length, arr);
-                    // console.log(a);
-                    // console.log(b);
-                    return _Op.mul(a, b);
+                    if (_Op.equal(b.type, "Matrix")) {
+                        var selfMatrix = new Matrix(this.length, 1, [this.array]);
+                        console.log(selfMatrix, b);
+                        var res = _Op.mul(selfMatrix, b);
+                        return new Vector(res.array[0]);
+                    }
                 }
             }
         }, {
@@ -842,22 +850,27 @@ var _Op = function () {
             value: function operatorMul(b) {
                 // console.log(this.size() == b.size());
                 if (_Op.equal(typeof b === "undefined" ? "undefined" : _typeof(b), "object")) {
-                    if (_Op.notEqual(this.w, b.h)) {
-                        console.error(new Error("Error 100: Matrix size does not match"));
-                        return null;
-                    }
-                    var _n = this.w;
-                    var c = new Matrix(this.h, b.w, 0);
-                    for (var i = 0; _Op.less(i, this.h); i++) {
-                        for (var j = 0; _Op.less(j, b.w); j++) {
-                            var sum = 0;
-                            for (var k = 0; _Op.less(k, _n); k++) {
-                                sum += _Op.mul(this.array[i][k], b.array[k][j]);
-                            }
-                            c.array[i][j] = sum;
+                    if (_Op.equal(b.type, "Matrix")) {
+                        if (_Op.notEqual(this.w, b.h)) {
+                            console.error(new Error("Error 100: Matrix size does not match"));
+                            return null;
                         }
+                        var _n = this.w;
+                        var c = new Matrix(this.h, b.w, 0);
+                        for (var i = 0; _Op.less(i, this.h); i++) {
+                            for (var j = 0; _Op.less(j, b.w); j++) {
+                                var sum = 0;
+                                for (var k = 0; _Op.less(k, _n); k++) {
+                                    sum += _Op.mul(this.array[i][k], b.array[k][j]);
+                                }
+                                c.array[i][j] = sum;
+                            }
+                        }
+                        return c;
                     }
-                    return c;
+                    // if (b.type == "Vector") {
+                    //
+                    // }
                 } else {
                     var _c = new Matrix(this.w, this.h, [].concat(this.array));
                     for (var _i8 = 0; _Op.less(_i8, this.h); _i8++) {
@@ -1503,10 +1516,9 @@ var _Op = function () {
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中
     See3D.load("Math3D"); // 将库加入See3D的默认加载队列
-    if (See3D.DEBUG) {
-        See3D.loadGlobal("Math3D"); // 将库加入浏览器全局
-        lib.global(); // 将库API加入浏览器全局
-    }
+    See3D.loadGlobal("Math3D"); // 将库加入浏览器全局
+    lib.global(); // 将库API加入浏览器全局
     See3D.lib("Math3D");
-}();
+    lib.toSee3D();
+}(See3D);
 //# sourceMappingURL=math.js.map
