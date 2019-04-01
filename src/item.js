@@ -101,15 +101,17 @@
                 // console.log(itemPoints[i].get(2));
                 if (itemPoints[i].get(2) < near_d || itemPoints[i].get(2) > far_d) continue;// 超出远近裁面
                 // console.log(itemPoints[i]);
-                let screenPos = new See3D.Vector2(
-                    itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
-                    -itemPoints[i].get(1) * d / itemPoints[i].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                );
-                ctx.beginPath();
-                ctx.arc(screenPos.x, screenPos.y, 5, 0, Math.PI * 2);
-                ctx.fillStyle = "#fff";
-                ctx.fill();
-                ctx.closePath();
+                if (items[i].type == "Point") {
+                    let screenPos = new See3D.Vector2(
+                        itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
+                        -itemPoints[i].get(1) * d / itemPoints[i].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
+                    );
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, items[i].r, 0, Math.PI * 2);
+                    ctx.fillStyle = "#fff";
+                    ctx.fill();
+                    ctx.closePath();
+                }
                 // console.log(screenPos);
             }
             return this;
@@ -119,72 +121,91 @@
         }
     }
 
+    let ITEM_CONFIG = {
+        "Cube": {
+            "Points": [
+                [1, 1, 1],
+                [1, 1, -1],
+                [1, -1, 1],
+                [1, -1, -1],
+                [-1, 1, 1],
+                [-1, 1, -1],
+                [-1, -1, 1],
+                [-1, -1, -1],
+            ],
+            "Planes": [
+                {
+                    "n": [1, 0, 0],
+                    "p0": [1, 0, 0]
+                },
+                {
+                    "n": [-1, 0, 0],
+                    "p0": [-1, 0, 0]
+                },
+                {
+                    "n": [0, 1, 0],
+                    "p0": [0, 1, 0]
+                },
+                {
+                    "n": [0, -1, 0],
+                    "p0": [0, -1, 0]
+                },
+                {
+                    "n": [0, 0, 1],
+                    "p0": [0, 0, 1]
+                },
+                {
+                    "n": [0, 0, -1],
+                    "p0": [0, 0, -1]
+                },
+            ]
+        }
+    };
+
     class entity extends Item {
-        constructor(p, r, planes) {
+        constructor(type, p, r, s, withItemConfig = true) {
             super(p, r);
-            this.planes = planes;
+            this.type = type;
+            this.planes = [];
+            this.points = [];
+            this.s = s;
+            if (withItemConfig) {
+                this.load();
+            }
+        }
+        load() {
+            let config = ITEM_CONFIG[this.type];
+            for (let i = 0; i < config["Points"].length; i++) {
+                this.points.push(new See3D.Vector3(...config["Points"][i]));
+            }
+            for (let i = 0; i < config["Planes"].length; i++) {
+                let arrN = config["Planes"][i]["n"];
+                let arrP0 = config["Planes"][i]["p0"];
+                arrN[0] *= this.s.get(0);
+                arrN[1] *= this.s.get(1);
+                arrN[2] *= this.s.get(2);
+                arrP0[0] *= this.s.get(0);
+                arrP0[1] *= this.s.get(1);
+                arrP0[2] *= this.s.get(2);
+                this.planes.push(new See3D.Plane3D(
+                    new Vector3(...arrN),
+                    new Vector3(...arrP0),
+                ));
+            }
         }
     }
 
     class Point extends entity {
         constructor(p = See3D.Vector3.Zero(), size = 10) {
-            super(p, See3D.Vector3.Zero());
-            this.type = "Point";
+            super("Point", p, null, See3D.Vector3.Zero(), false);
             this.r = size;
         }
     }
-    // class PlaneView extends Item {
-    //     constructor(p = See3D.Vector3.Zero(), r = See3D.Vector3.Zero(), points = [], bind) {
-    //         super(p, r);
-    //         this.points = points;
-    //         this.bind = bind;
-    //     }
-    //     trans() {
-    //         let points = [];
-    //         for (let i = 0; i < this.points.length; i++) {
-    //             points.push(new See3D.Vector3(this.points[i].x + this.bind.x, this.points[i].y + this.bind.y, this.points[i].z + this.bind.z));
-    //         }
-    //         return points;
-    //     }
-    // }
-    //
-    // let ITEM_CONFIG = {
-    //     "classes": {
-    //         "Cube": {
-    //             planes: [
-    //             ]
-    //         }
-    //     }
-    // };
-    //
-    // class Cube extends entity {
-    //     constructor(p, s) {
-    //         let planes = [];
-    //         super(p, See3D.Vector3.Zero(), [
-    //             new PlaneView(new See3D.Vector3(p.x + s.x, p.y, p.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //             ]),
-    //             new PlaneView(new See3D.Vector3(p.x, p.y + s.y, p.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //             ]),
-    //             new PlaneView(new See3D.Vector3(p.x, p.y, p.z - s.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //             ]),
-    //         ]);
-    //     }
-    // }
+    class Cube extends entity {
+        constructor(p = See3D.Vector3.Zero(), r = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1)) {
+            super("Cube", p, r, s);
+        }
+    }
 
     lib.define("Item", Item);// virtual
 
@@ -193,7 +214,9 @@
 
     lib.define("entity", entity);// virtual
 
+    lib.define("ITEM_CONFIG", ITEM_CONFIG);
     lib.define("Point", Point);
+    lib.define("Cube", Cube);
 
     lib.trans();
     See3D.library(lib);

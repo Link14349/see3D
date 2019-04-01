@@ -30,6 +30,7 @@ class See3D {
         this.sout = new See3D.IO.sostream(this);
         this.__scenes = {};
         this.use = null;
+        this.__fps = 0;
         for (let i in dom) {
             if (!this[i]) this[i] = dom[i];
         }
@@ -80,15 +81,24 @@ class See3D {
         return this;
     }
     renderLoop(PhyFun, ViewFun) {
+        let time = 0;
+        setInterval(function () {
+            time++;
+        }, 1);
         let self = this;
         requestAnimationFrame(function cb() {
-            if (PhyFun) PhyFun();// 物理
+            self.__fps = Number((1000 / time).toFixed(2));
+            time = 0;
+            if (PhyFun) PhyFun(self);// 物理
             let {width, height} = self.dom;
             self.ctx.clearRect(0, 0, width, height);
             self.render();
-            if (ViewFun) ViewFun();// 视角
+            if (ViewFun) ViewFun(self);// 视角
             requestAnimationFrame(cb);
         });
+    }
+    get fps() {
+        return this.__fps;
     }
     noView() {
         let ctx = this.ctx;

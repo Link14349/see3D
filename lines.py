@@ -5,7 +5,7 @@ import sys
 import re
 
 root = os.getcwd()
-shields = ["dist", ".idea", ".git"]
+shields = ["release", "dist", ".idea", ".git", "tests"]
 lines = 0
 sizes = 0
 same = root

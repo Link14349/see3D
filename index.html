@@ -47,7 +47,7 @@
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
     let camera = new See3D.Camera(new See3D.Vector3(0, 0, 0), new See3D.Vector3(0, 0, 0), "camera", scene);
-    let point = new See3D.Point(new See3D.Vector3(0, 0, 10));
+    let point = new See3D.Point(new See3D.Vector3(0, 0, 10), 3);
     scene
         .push(camera)
         .camera("camera")
@@ -58,33 +58,51 @@
         .scene("scene")
     ;
     game.full();
-    game.renderLoop();
+    let keyCode = 0;
+    game.renderLoop(
+        function PhyUpdate(self) {
+            if (keyCode == 38) {// up
+                camera.move(new Vector3(0, 0, 1));
+            }
+            if (keyCode == 40) {// down
+                camera.move(new Vector3(0, 0, -1));
+            }
+            if (keyCode == 37) {// left
+                camera.move(new Vector3(-1, 0, 0));
+            }
+            if (keyCode == 39) {// right
+                camera.move(new Vector3(1, 0, 0));
+            }
+            if (keyCode == 65) {// a
+                camera.rotate(new Vector3(0, -Math.PI / 180, 0));
+            }
+            if (keyCode == 68) {// d
+                camera.rotate(new Vector3(0, Math.PI / 180, 0));
+            }
+            if (keyCode == 87) {// w
+                camera.rotate(new Vector3(-Math.PI / 180, 0, 0));
+            }
+            if (keyCode == 83) {// s
+                camera.rotate(new Vector3(Math.PI / 180, 0, 0));
+            }
+        },
+        function ViewUpdate(self) {
+            let ctx = self.ctx;
+            ctx.beginPath();
+            ctx.font = "20px Verdana";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#fff";
+            ctx.fillText("FPS: " + self.fps, self.width(), 0);
+            ctx.closePath();
+        }
+    );
     document.onkeydown = function (e) {
         // console.log(e.keyCode);
-        if (e.keyCode == 38) {// up
-            camera.move(new Vector3(0, 0, 1));
-        }
-        if (e.keyCode == 40) {// down
-            camera.move(new Vector3(0, 0, -1));
-        }
-        if (e.keyCode == 37) {// left
-            camera.move(new Vector3(-1, 0, 0));
-        }
-        if (e.keyCode == 39) {// right
-            camera.move(new Vector3(1, 0, 0));
-        }
-        if (e.keyCode == 65) {// a
-            camera.rotate(new Vector3(0, -Math.PI / 10, 0));
-        }
-        if (e.keyCode == 68) {// d
-            camera.rotate(new Vector3(0, Math.PI / 10, 0));
-        }
-        if (e.keyCode == 87) {// w
-            camera.rotate(new Vector3(-Math.PI / 10, 0, 0));
-        }
-        if (e.keyCode == 83) {// s
-            camera.rotate(new Vector3(Math.PI / 10, 0, 0));
-        }
+        keyCode = e.keyCode;
+    };
+    document.onkeyup = function (e) {
+        keyCode = -1;
     };
     // game.render();
 </script>

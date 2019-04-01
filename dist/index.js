@@ -113,6 +113,7 @@ var See3D = function () {
         this.sout = new See3D.IO.sostream(this);
         this.__scenes = {};
         this.use = null;
+        this.__fps = 0;
         for (var i in dom) {
             if (!this[i]) this[i] = dom[i];
         }
@@ -175,16 +176,22 @@ var See3D = function () {
     }, {
         key: "renderLoop",
         value: function renderLoop(PhyFun, ViewFun) {
+            var time = 0;
+            setInterval(function () {
+                time++;
+            }, 1);
             var self = this;
             requestAnimationFrame(function cb() {
-                if (PhyFun) PhyFun(); // 物理
+                self.__fps = Number((1000 / time).toFixed(2));
+                time = 0;
+                if (PhyFun) PhyFun(self); // 物理
                 var _self$dom = self.dom,
                     width = _self$dom.width,
                     height = _self$dom.height;
 
                 self.ctx.clearRect(0, 0, width, height);
                 self.render();
-                if (ViewFun) ViewFun(); // 视角
+                if (ViewFun) ViewFun(self); // 视角
                 requestAnimationFrame(cb);
             });
         }
@@ -261,6 +268,11 @@ var See3D = function () {
         value: function load(name) {
             this[name] = See3D.__libraries.get(name);
             return this;
+        }
+    }, {
+        key: "fps",
+        get: function get() {
+            return this.__fps;
         }
     }, {
         key: "dom",

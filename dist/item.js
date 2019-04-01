@@ -3,6 +3,8 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; _Op.less(i, props.length); i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); _Op.less(i, arr.length); i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -235,12 +237,14 @@ var _Op = function () {
                     // console.log(itemPoints[i].get(2));
                     if (_Op.less(itemPoints[_i].get(2), near_d) || _Op.greater(itemPoints[_i].get(2), far_d)) continue; // 超出远近裁面
                     // console.log(itemPoints[i]);
-                    var screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
-                    ctx.beginPath();
-                    ctx.arc(screenPos.x, screenPos.y, 5, 0, _Op.mul(Math.PI, 2));
-                    ctx.fillStyle = "#fff";
-                    ctx.fill();
-                    ctx.closePath();
+                    if (_Op.equal(items[_i].type, "Point")) {
+                        var screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
+                        ctx.beginPath();
+                        ctx.arc(screenPos.x, screenPos.y, items[_i].r, 0, _Op.mul(Math.PI, 2));
+                        ctx.fillStyle = "#fff";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
                     // console.log(screenPos);
                 }
                 return this;
@@ -255,17 +259,71 @@ var _Op = function () {
         return Camera;
     }(Item);
 
+    var ITEM_CONFIG = {
+        "Cube": {
+            "Points": [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]],
+            "Planes": [{
+                "n": [1, 0, 0],
+                "p0": [1, 0, 0]
+            }, {
+                "n": [-1, 0, 0],
+                "p0": [-1, 0, 0]
+            }, {
+                "n": [0, 1, 0],
+                "p0": [0, 1, 0]
+            }, {
+                "n": [0, -1, 0],
+                "p0": [0, -1, 0]
+            }, {
+                "n": [0, 0, 1],
+                "p0": [0, 0, 1]
+            }, {
+                "n": [0, 0, -1],
+                "p0": [0, 0, -1]
+            }]
+        }
+    };
+
     var entity = function (_Item2) {
         _inherits(entity, _Item2);
 
-        function entity(p, r, planes) {
+        function entity(type, p, r, s) {
+            var withItemConfig = _Op.greater(arguments.length, 4) && arguments[4] !== undefined ? arguments[4] : true;
+
             _classCallCheck(this, entity);
 
             var _this4 = _possibleConstructorReturn(this, (entity.__proto__ || Object.getPrototypeOf(entity)).call(this, p, r));
 
-            _this4.planes = planes;
+            _this4.type = type;
+            _this4.planes = [];
+            _this4.points = [];
+            _this4.s = s;
+            if (withItemConfig) {
+                _this4.load();
+            }
             return _this4;
         }
+
+        _createClass(entity, [{
+            key: "load",
+            value: function load() {
+                var config = ITEM_CONFIG[this.type];
+                for (var i = 0; _Op.less(i, config["Points"].length); i++) {
+                    this.points.push(new (Function.prototype.bind.apply(See3D.Vector3, [null].concat(_toConsumableArray(config["Points"][i]))))());
+                }
+                for (var _i2 = 0; _Op.less(_i2, config["Planes"].length); _i2++) {
+                    var arrN = config["Planes"][_i2]["n"];
+                    var arrP0 = config["Planes"][_i2]["p0"];
+                    arrN[0] *= this.s.get(0);
+                    arrN[1] *= this.s.get(1);
+                    arrN[2] *= this.s.get(2);
+                    arrP0[0] *= this.s.get(0);
+                    arrP0[1] *= this.s.get(1);
+                    arrP0[2] *= this.s.get(2);
+                    this.planes.push(new See3D.Plane3D(new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(arrN))))(), new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(arrP0))))()));
+                }
+            }
+        }]);
 
         return entity;
     }(Item);
@@ -279,67 +337,30 @@ var _Op = function () {
 
             _classCallCheck(this, Point);
 
-            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, p, See3D.Vector3.Zero()));
+            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, "Point", p, null, See3D.Vector3.Zero(), false));
 
-            _this5.type = "Point";
             _this5.r = size;
             return _this5;
         }
 
         return Point;
     }(entity);
-    // class PlaneView extends Item {
-    //     constructor(p = See3D.Vector3.Zero(), r = See3D.Vector3.Zero(), points = [], bind) {
-    //         super(p, r);
-    //         this.points = points;
-    //         this.bind = bind;
-    //     }
-    //     trans() {
-    //         let points = [];
-    //         for (let i = 0; i < this.points.length; i++) {
-    //             points.push(new See3D.Vector3(this.points[i].x + this.bind.x, this.points[i].y + this.bind.y, this.points[i].z + this.bind.z));
-    //         }
-    //         return points;
-    //     }
-    // }
-    //
-    // let ITEM_CONFIG = {
-    //     "classes": {
-    //         "Cube": {
-    //             planes: [
-    //             ]
-    //         }
-    //     }
-    // };
-    //
-    // class Cube extends entity {
-    //     constructor(p, s) {
-    //         let planes = [];
-    //         super(p, See3D.Vector3.Zero(), [
-    //             new PlaneView(new See3D.Vector3(p.x + s.x, p.y, p.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //             ]),
-    //             new PlaneView(new See3D.Vector3(p.x, p.y + s.y, p.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //             ]),
-    //             new PlaneView(new See3D.Vector3(p.x, p.y, p.z - s.z), See3D.Vector3.Zero(), [
-    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x - s.x, p.y - s.y, p.z - s.z),
-    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //             ]),
-    //         ]);
-    //     }
-    // }
+
+    var Cube = function (_entity2) {
+        _inherits(Cube, _entity2);
+
+        function Cube() {
+            var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : See3D.Vector3.Zero();
+            var r = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : See3D.Vector3.Zero();
+            var s = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : new See3D.Vector3(1, 1, 1);
+
+            _classCallCheck(this, Cube);
+
+            return _possibleConstructorReturn(this, (Cube.__proto__ || Object.getPrototypeOf(Cube)).call(this, "Cube", p, r, s));
+        }
+
+        return Cube;
+    }(entity);
 
     lib.define("Item", Item); // virtual
 
@@ -348,7 +369,9 @@ var _Op = function () {
 
     lib.define("entity", entity); // virtual
 
+    lib.define("ITEM_CONFIG", ITEM_CONFIG);
     lib.define("Point", Point);
+    lib.define("Cube", Cube);
 
     lib.trans();
     See3D.library(lib);
