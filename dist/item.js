@@ -89,8 +89,8 @@ var _Op = function () {
         _inherits(Item, _See3D$LibraryDefineO);
 
         function Item() {
-            var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : Vector3.Zero();
-            var r = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : Vector3.Zero();
+            var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : See3D.Vector3.Zero();
+            var r = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : See3D.Vector3.Zero();
 
             _classCallCheck(this, Item);
 
@@ -100,6 +100,22 @@ var _Op = function () {
             _this.rotation = r;
             return _this;
         }
+
+        _createClass(Item, [{
+            key: "move",
+            value: function move(d) {
+                var tmp = new Vector(this.position);
+                tmp.push(1);
+                var res = _Op.mul(tmp, See3D.Matrix.TransMove(d));
+                this.position = new Vector3(res.get(0), res.get(1), res.get(2));
+                // console.log(this.position);
+            }
+        }, {
+            key: "rotate",
+            value: function rotate(r) {
+                this.rotation = new Vector3(_Op.add(this.rotation.get(0), r.get(0)), _Op.add(this.rotation.get(1), r.get(1)), _Op.add(this.rotation.get(2), r.get(2)));
+            }
+        }]);
 
         return Item;
     }(See3D.LibraryDefineObject);
@@ -193,13 +209,39 @@ var _Op = function () {
             value: function render() {
                 var items = this.scene.items;
                 var ctx = this.scene.ctx;
+                var _scene$dom = this.scene.dom,
+                    sw = _scene$dom.width,
+                    sh = _scene$dom.height;
+                var _See3D = See3D,
+                    FOV_x = _See3D.FOV_x,
+                    FOV_y = _See3D.FOV_y;
+
                 var itemPoints = [];
                 var move = See3D.Matrix.TransMoveInverse(this.position);
+                var rotate = See3D.Matrix.TransRotate(new See3D.Vector3(-this.rotation.x, -this.rotation.y, -this.rotation.z));
+                var trans = _Op.mul(move, rotate);
+                var d = Math.max(_Op.div(_Op.div(sw, 100), _Op.mul(2, Math.tan(_Op.div(FOV_x, 2)))), _Op.div(_Op.div(sh, 100), _Op.mul(2, Math.tan(_Op.div(FOV_y, 2)))));
+                var near_d = 0.1;
+                var far_d = 1000;
+                // console.log(d);
                 // console.log("update");
                 for (var i = 0; _Op.less(i, items.length); i++) {
-                    var p = items[i].position;
+                    var p = new See3D.Vector3(items[i].position);
                     p.array.push(1);
-                    itemPoints.push(_Op.mul(p, move));
+                    itemPoints.push(_Op.mul(p, trans));
+                }
+                // console.log(itemPoints);
+                for (var _i = 0; _Op.less(_i, itemPoints.length); _i++) {
+                    // console.log(itemPoints[i].get(2));
+                    if (_Op.less(itemPoints[_i].get(2), near_d) || _Op.greater(itemPoints[_i].get(2), far_d)) continue; // 超出远近裁面
+                    // console.log(itemPoints[i]);
+                    var screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, 5, 0, _Op.mul(Math.PI, 2));
+                    ctx.fillStyle = "#fff";
+                    ctx.fill();
+                    ctx.closePath();
+                    // console.log(screenPos);
                 }
                 return this;
             }
@@ -232,12 +274,12 @@ var _Op = function () {
         _inherits(Point, _entity);
 
         function Point() {
-            var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : Vector3.Zero();
+            var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : See3D.Vector3.Zero();
             var size = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 10;
 
             _classCallCheck(this, Point);
 
-            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, p, Vector3.Zero()));
+            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, p, See3D.Vector3.Zero()));
 
             _this5.type = "Point";
             _this5.r = size;
@@ -247,7 +289,7 @@ var _Op = function () {
         return Point;
     }(entity);
     // class PlaneView extends Item {
-    //     constructor(p = Vector3.Zero(), r = Vector3.Zero(), points = [], bind) {
+    //     constructor(p = See3D.Vector3.Zero(), r = See3D.Vector3.Zero(), points = [], bind) {
     //         super(p, r);
     //         this.points = points;
     //         this.bind = bind;
@@ -255,7 +297,7 @@ var _Op = function () {
     //     trans() {
     //         let points = [];
     //         for (let i = 0; i < this.points.length; i++) {
-    //             points.push(new Vector3(this.points[i].x + this.bind.x, this.points[i].y + this.bind.y, this.points[i].z + this.bind.z));
+    //             points.push(new See3D.Vector3(this.points[i].x + this.bind.x, this.points[i].y + this.bind.y, this.points[i].z + this.bind.z));
     //         }
     //         return points;
     //     }
@@ -273,27 +315,27 @@ var _Op = function () {
     // class Cube extends entity {
     //     constructor(p, s) {
     //         let planes = [];
-    //         super(p, Vector3.Zero(), [
-    //             new PlaneView(new Vector3(p.x + s.x, p.y, p.z), Vector3.Zero(), [
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new Vector3(p.x + s.x, p.y - s.y, p.z + s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
+    //         super(p, See3D.Vector3.Zero(), [
+    //             new PlaneView(new See3D.Vector3(p.x + s.x, p.y, p.z), See3D.Vector3.Zero(), [
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z + s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
     //             ]),
-    //             new PlaneView(new Vector3(p.x, p.y + s.y, p.z), Vector3.Zero(), [
-    //                 new Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new Vector3(p.x - s.x, p.y + s.y, p.z + s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
+    //             new PlaneView(new See3D.Vector3(p.x, p.y + s.y, p.z), See3D.Vector3.Zero(), [
+    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z + s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z + s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
     //             ]),
-    //             new PlaneView(new Vector3(p.x, p.y, p.z - s.z), Vector3.Zero(), [
-    //                 new Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
-    //                 new Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
-    //                 new Vector3(p.x - s.x, p.y - s.y, p.z - s.z),
-    //                 new Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
+    //             new PlaneView(new See3D.Vector3(p.x, p.y, p.z - s.z), See3D.Vector3.Zero(), [
+    //                 new See3D.Vector3(p.x - s.x, p.y + s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y - s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x - s.x, p.y - s.y, p.z - s.z),
+    //                 new See3D.Vector3(p.x + s.x, p.y + s.y, p.z - s.z),
     //             ]),
     //         ]);
     //     }

@@ -339,6 +339,11 @@ var _Op = function () {
         }
 
         _createClass(Vector, [{
+            key: "push",
+            value: function push(val) {
+                this.array.push(val);
+            }
+        }, {
             key: "set",
             value: function set(index, val) {
                 this.array[index] = val;
@@ -1124,6 +1129,7 @@ var _Op = function () {
 
         var d = _Op.sub(_Op.sub(_Op.mul(-a, x0), _Op.mul(b, y0)), _Op.mul(c, z0));
         var t = _Op.div(-_Op.add(_Op.add(_Op.add(_Op.mul(a, x0), _Op.mul(b, y0)), _Op.mul(c, z0)), d), _Op.add(_Op.add(_Op.mul(a, vx), _Op.mul(b, vy)), _Op.mul(c, vz)));
+        console.log(-_Op.add(_Op.add(_Op.add(_Op.mul(a, x0), _Op.mul(b, y0)), _Op.mul(c, z0)), d));
         var x = _Op.mul(_Op.mul(x0, vx), t);
         var y = _Op.mul(_Op.mul(y0, vy), t);
         var z = _Op.mul(_Op.mul(z0, vz), t);

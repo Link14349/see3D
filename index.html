@@ -29,7 +29,7 @@
             height: 100%;
         }
         canvas {
-            background-color: #333;
+            /*background-color: #333;*/
             width: 100%;
             height: 100%;
             display: block;
@@ -38,11 +38,16 @@
 </head>
 <body>
 <canvas id="canvas"></canvas>
+<!--Tests-->
+<!--<script type="text/javascript" src="dist/tests/IO.js"></script>-->
+<script type="text/javascript">
+    console.timeEnd("Tests");
+</script>
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
-    let camera = new See3D.Camera(See3D.Vector3.Zero(), See3D.Vector3.Zero(), "camera", scene);
-    let point = new See3D.Point(new See3D.Vector3(10, 10, 10));
+    let camera = new See3D.Camera(new See3D.Vector3(0, 0, 0), new See3D.Vector3(0, 0, 0), "camera", scene);
+    let point = new See3D.Point(new See3D.Vector3(0, 0, 10));
     scene
         .push(camera)
         .camera("camera")
@@ -53,14 +58,35 @@
         .scene("scene")
     ;
     game.full();
-    // game.renderLoop();
-    game.render();
-</script>
-
-<!--Tests-->
-<!--<script type="text/javascript" src="dist/tests/IO.js"></script>-->
-<script type="text/javascript">
-    console.timeEnd("Tests");
+    game.renderLoop();
+    document.onkeydown = function (e) {
+        // console.log(e.keyCode);
+        if (e.keyCode == 38) {// up
+            camera.move(new Vector3(0, 0, 1));
+        }
+        if (e.keyCode == 40) {// down
+            camera.move(new Vector3(0, 0, -1));
+        }
+        if (e.keyCode == 37) {// left
+            camera.move(new Vector3(-1, 0, 0));
+        }
+        if (e.keyCode == 39) {// right
+            camera.move(new Vector3(1, 0, 0));
+        }
+        if (e.keyCode == 65) {// a
+            camera.rotate(new Vector3(0, -Math.PI / 10, 0));
+        }
+        if (e.keyCode == 68) {// d
+            camera.rotate(new Vector3(0, Math.PI / 10, 0));
+        }
+        if (e.keyCode == 87) {// w
+            camera.rotate(new Vector3(-Math.PI / 10, 0, 0));
+        }
+        if (e.keyCode == 83) {// s
+            camera.rotate(new Vector3(Math.PI / 10, 0, 0));
+        }
+    };
+    // game.render();
 </script>
 </body>
 </html>

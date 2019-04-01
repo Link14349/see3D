@@ -30,6 +30,9 @@ class See3D {
         this.sout = new See3D.IO.sostream(this);
         this.__scenes = {};
         this.use = null;
+        for (let i in dom) {
+            if (!this[i]) this[i] = dom[i];
+        }
     }
     width(w) {
         if (w === void(0)) {
@@ -62,11 +65,18 @@ class See3D {
         return this;
     }
     render() {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#33334a";
+        this.ctx.fillRect(0, 0, this.dom.width, this.dom.height);
+        this.ctx.closePath();
+        this.ctx.save();
+        this.ctx.translate(this.dom.width / 2, this.dom.height / 2);
         if (this.use) {
             this.use.render();
         } else {
             this.noView();
         }
+        this.ctx.restore();
         return this;
     }
     renderLoop(PhyFun, ViewFun) {
@@ -84,7 +94,7 @@ class See3D {
         let ctx = this.ctx;
         let {width, height} = this.dom;
         ctx.beginPath();
-        ctx.fillStyle = "#333";
+        ctx.fillStyle = "#33334a";
         ctx.fillRect(0, 0, width, height);
         ctx.fillStyle = "#fff";
         ctx.textAlign = "center";
@@ -227,4 +237,9 @@ class See3D {
     See3D.LibraryDefineObject = LibraryDefineObject;
     See3D.checkType = checkType;
     See3D.translate = translate;
+
+    // 设置See3D视野角度
+    See3D.FOV_x = Math.PI / 180 * 120;
+    See3D.FOV_y = Math.PI / 180 * 120;
+    See3D.defaultBGC = "";
 }(See3D);

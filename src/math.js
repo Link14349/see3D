@@ -160,6 +160,9 @@
             if (arr.type && arr.type == "Vector") for (let i of arr.array) this.array.push(i);
             else for (let i of arr) this.array.push(i);
         }
+        push(val) {
+            this.array.push(val);
+        }
         set(index, val) {
             this.array[index] = val;
             return this;
@@ -756,6 +759,7 @@
             /
             (a * vx + b * vy + c * vz)
         ;
+        console.log(-(a * x0 + b * y0 + c * z0 + d));
         let x = x0 * vx * t;
         let y = y0 * vy * t;
         let z = z0 * vz * t;
