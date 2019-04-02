@@ -46,12 +46,20 @@
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
-    let camera = new See3D.Camera(new See3D.Vector3(0, 0, 0), new See3D.Vector3(0, 0, 0), "camera", scene);
-    let point = new See3D.Point(new See3D.Vector3(0, 0, 10), 3);
+    let camera = new See3D.Camera(new See3D.Vector3(0, 0, 0), "camera", scene);
+    let point1 = new See3D.Point(new See3D.Vector3(0, -5, 10), 3);
+    let point2 = new See3D.Point(new See3D.Vector3(0, 5, 10), 3);
+    let point3 = new See3D.Point(new See3D.Vector3(5, 0, 10), 3);
+    let point4 = new See3D.Point(new See3D.Vector3(-5, 0, 10), 3);
+    let cube = new See3D.Cube(new See3D.Vector3(0, 0, 10));
     scene
         .push(camera)
         .camera("camera")
-        .push(point)
+        .push(point1)
+        .push(point2)
+        .push(point3)
+        .push(point4)
+        .push(cube)
     ;
     game
         .push(scene)
@@ -59,6 +67,14 @@
     ;
     game.full();
     let keyCode = 0;
+    document.onkeydown = function (e) {
+        // console.log(e.keyCode);
+        keyCode = e.keyCode;
+    };
+    document.onkeyup = function (e) {
+        keyCode = -1;
+    };
+    // game.render();
     game.renderLoop(
         function PhyUpdate(self) {
             if (keyCode == 38) {// up
@@ -97,14 +113,9 @@
             ctx.closePath();
         }
     );
-    document.onkeydown = function (e) {
-        // console.log(e.keyCode);
-        keyCode = e.keyCode;
-    };
-    document.onkeyup = function (e) {
-        keyCode = -1;
-    };
-    // game.render();
+    // window.onresize = function () {
+        // game.resize();
+    // };
 </script>
 </body>
 </html>

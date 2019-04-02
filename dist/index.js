@@ -114,6 +114,8 @@ var See3D = function () {
         this.__scenes = {};
         this.use = null;
         this.__fps = 0;
+        // this.__time = 0;
+        this.__BGC = See3D.defaultBGC;
         for (var i in dom) {
             if (!this[i]) this[i] = dom[i];
         }
@@ -144,6 +146,11 @@ var See3D = function () {
             return this;
         }
     }, {
+        key: "resize",
+        value: function resize() {
+            this.width(window.innerWidth).height(window.innerHeight);
+        }
+    }, {
         key: "push",
         value: function push(s) {
             this.__scenes[s.name] = s;
@@ -160,30 +167,37 @@ var See3D = function () {
         key: "render",
         value: function render() {
             this.ctx.beginPath();
-            this.ctx.fillStyle = "#33334a";
+            this.ctx.fillStyle = this.__BGC;
             this.ctx.fillRect(0, 0, this.dom.width, this.dom.height);
             this.ctx.closePath();
             this.ctx.save();
             this.ctx.translate(this.dom.width / 2, this.dom.height / 2);
             if (this.use) {
                 this.use.render();
+                this.ctx.restore();
             } else {
+                this.ctx.restore();
                 this.noView();
             }
-            this.ctx.restore();
             return this;
         }
     }, {
         key: "renderLoop",
         value: function renderLoop(PhyFun, ViewFun) {
-            var time = 0;
-            setInterval(function () {
-                time++;
-            }, 1);
             var self = this;
+            var time = 0;
+            var count = 0;
+            self.__fps = 0;
+            setInterval(function () {
+                time = 1;
+            }, 1000);
             requestAnimationFrame(function cb() {
-                self.__fps = Number((1000 / time).toFixed(2));
-                time = 0;
+                count++;
+                if (time) {
+                    self.__fps = count;
+                    count = 0;
+                    time = 0;
+                }
                 if (PhyFun) PhyFun(self); // 物理
                 var _self$dom = self.dom,
                     width = _self$dom.width,
@@ -204,7 +218,7 @@ var See3D = function () {
                 height = _dom.height;
 
             ctx.beginPath();
-            ctx.fillStyle = "#33334a";
+            ctx.fillStyle = this.__BGC;
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = "#fff";
             ctx.textAlign = "center";
@@ -433,6 +447,8 @@ var See3D = function () {
     // 设置See3D视野角度
     See3D.FOV_x = Math.PI / 180 * 120;
     See3D.FOV_y = Math.PI / 180 * 120;
-    See3D.defaultBGC = "";
+
+    // 设置See3D默认背景颜色
+    See3D.defaultBGC = "#33334a";
 }(See3D);
 //# sourceMappingURL=index.js.map

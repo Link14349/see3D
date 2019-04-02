@@ -31,6 +31,8 @@ class See3D {
         this.__scenes = {};
         this.use = null;
         this.__fps = 0;
+        // this.__time = 0;
+        this.__BGC = See3D.defaultBGC;
         for (let i in dom) {
             if (!this[i]) this[i] = dom[i];
         }
@@ -56,6 +58,12 @@ class See3D {
         ;
         return this;
     }
+    resize() {
+        this
+            .width(window.innerWidth)
+            .height(window.innerHeight)
+        ;
+    }
     push(s) {
         this.__scenes[s.name] = s;
         if (!this.use) this.use = s;
@@ -67,28 +75,35 @@ class See3D {
     }
     render() {
         this.ctx.beginPath();
-        this.ctx.fillStyle = "#33334a";
+        this.ctx.fillStyle = this.__BGC;
         this.ctx.fillRect(0, 0, this.dom.width, this.dom.height);
         this.ctx.closePath();
         this.ctx.save();
         this.ctx.translate(this.dom.width / 2, this.dom.height / 2);
         if (this.use) {
             this.use.render();
+            this.ctx.restore();
         } else {
+            this.ctx.restore();
             this.noView();
         }
-        this.ctx.restore();
         return this;
     }
     renderLoop(PhyFun, ViewFun) {
-        let time = 0;
-        setInterval(function () {
-            time++;
-        }, 1);
         let self = this;
+        let time = 0;
+        let count = 0;
+        self.__fps = 0;
+        setInterval(function () {
+            time = 1;
+        }, 1000);
         requestAnimationFrame(function cb() {
-            self.__fps = Number((1000 / time).toFixed(2));
-            time = 0;
+            count++;
+            if (time) {
+                self.__fps = count;
+                count = 0;
+                time = 0;
+            }
             if (PhyFun) PhyFun(self);// 物理
             let {width, height} = self.dom;
             self.ctx.clearRect(0, 0, width, height);
@@ -104,7 +119,7 @@ class See3D {
         let ctx = this.ctx;
         let {width, height} = this.dom;
         ctx.beginPath();
-        ctx.fillStyle = "#33334a";
+        ctx.fillStyle = this.__BGC;
         ctx.fillRect(0, 0, width, height);
         ctx.fillStyle = "#fff";
         ctx.textAlign = "center";
@@ -251,5 +266,7 @@ class See3D {
     // 设置See3D视野角度
     See3D.FOV_x = Math.PI / 180 * 120;
     See3D.FOV_y = Math.PI / 180 * 120;
-    See3D.defaultBGC = "";
+
+    // 设置See3D默认背景颜色
+    See3D.defaultBGC = "#33334a";
 }(See3D);
