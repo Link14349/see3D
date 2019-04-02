@@ -2682,7 +2682,7 @@ var _Op = function () {
     See3D.library(lib);
     See3D.load("View");
     if (See3D.DEBUG) {
-        See3D.loadGlobal("Math3D"); // 将库加入浏览器全局
+        See3D.loadGlobal("View"); // 将库加入浏览器全局
         lib.global(); // 将库API加入浏览器全局
     }
     See3D.lib("View");
