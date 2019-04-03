@@ -555,6 +555,26 @@ var _Op = function () {
             get: function get() {
                 return this.array.length;
             }
+        }, {
+            key: "x",
+            get: function get() {
+                return this.get(0);
+            }
+        }, {
+            key: "y",
+            get: function get() {
+                return this.get(1);
+            }
+        }, {
+            key: "z",
+            get: function get() {
+                return this.get(2);
+            }
+        }, {
+            key: "w",
+            get: function get() {
+                return this.get(3);
+            }
         }]);
 
         return Vector;
@@ -1479,6 +1499,14 @@ var _Op = function () {
         return new Spherical3D(rho, String(d1) === "NaN" ? 0 : d1, String(d2) === "NaN" ? 0 : d2);
     }
 
+    // 随机数函数
+    function rand(s, e) {
+        return _Op.add(_Op.mul(Math.random(), _Op.sub(e, s)), s);
+    }
+    function randint(s, e) {
+        return parseInt(rand(s, e));
+    }
+
     // 在库中定义所有的接口
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
@@ -1518,6 +1546,9 @@ var _Op = function () {
     lib.define("rect3DToCylindrical3D", rect3DToCylindrical3D);
     lib.define("spherical3DToRect3D", spherical3DToRect3D);
     lib.define("rect3DToSpherical3D", rect3DToSpherical3D);
+
+    lib.define("rand", rand);
+    lib.define("randint", randint);
 
     lib.trans(); // 在库的全局添加接口
     See3D.library(lib); // 将库加载入See3D中

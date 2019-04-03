@@ -180,6 +180,18 @@
         get length() {
             return this.array.length;
         }
+        get x() {
+            return this.get(0);
+        }
+        get y() {
+            return this.get(1);
+        }
+        get z() {
+            return this.get(2);
+        }
+        get w() {
+            return this.get(3);
+        }
         // 点积
         operatorMod(b) {
             if (typeof b === "number") {
@@ -1010,6 +1022,14 @@
         );
     }
 
+    // 随机数函数
+    function rand(s, e) {
+        return (Math.random() * (e - s) + s);
+    }
+    function randint(s, e) {
+        return parseInt(rand(s, e));
+    }
+
     // 在库中定义所有的接口
     lib.define("smallest", smallest);
     lib.define("smallestLen", smallestLen);
@@ -1049,6 +1069,9 @@
     lib.define("rect3DToCylindrical3D", rect3DToCylindrical3D);
     lib.define("spherical3DToRect3D", spherical3DToRect3D);
     lib.define("rect3DToSpherical3D", rect3DToSpherical3D);
+
+    lib.define("rand", rand);
+    lib.define("randint", randint);
 
     lib.trans();// 在库的全局添加接口
     See3D.library(lib);// 将库加载入See3D中

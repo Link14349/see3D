@@ -17,9 +17,11 @@
             let res = tmp * See3D.Matrix.TransMove(d);
             this.position = new Vector3(res.get(0), res.get(1), res.get(2));
             // console.log(this.position);
+            return this;
         }
         rotate(r) {
             this.rotation = new Vector3(this.rotation.get(0) + r.get(0), this.rotation.get(1) + r.get(1), this.rotation.get(2) + r.get(2));
+            return this;
         }
     }
     class Scene extends See3D.LibraryDefineObject {
@@ -73,6 +75,7 @@
             this.type = "Camera";
             this.scene = scene;
             this.__name = name;
+            this.d = 0;
         }
         render() {
             // console.log("a");
@@ -90,7 +93,8 @@
                 sw / 100 / (2 * Math.tan(FOV_x / 2)),
                 sh / 100 / (2 * Math.tan(FOV_y / 2))
             );
-            let near_d = d + 0.1;
+            this.d = d;
+            let near_d = 0.1;
             let far_d = 1000;
             // console.log(d);
             // console.log("update");
@@ -100,7 +104,9 @@
                     p.array.push(1);
                     itemPoints.push(p * trans);
                 } else {
-                    itemPoints.push([[], []]);
+                    itemPoints.push([[], [],
+                        (new See3D.Vector4(items[i].position.x, items[i].position.y, items[i].position.z, 1) * trans)
+                    ]);
                     // console.log(items[i].points);
                     for (let j = 0; j < items[i].points.length; j++) {
                         let p = items[i].points[j] + items[i].position;
@@ -133,70 +139,62 @@
                     );
                     ctx.beginPath();
                     ctx.arc(screenPos.x, screenPos.y, item.r, 0, Math.PI * 2);
-                    ctx.fillStyle = "#fff";
+                    ctx.fillStyle = items[i].color;
                     ctx.fill();
                     ctx.closePath();
                 } else {
                     let r = Camera.r(item);
-                    if (item.position.z - r > far_d) continue;// 超过远裁面
-                    if (item.position.z + r < near_d) continue;// 小于近裁面
-                    if (
-                        item.position.x - r > Math.tan(See3D.FOV_x / 2) * item.position.z
-                    ) continue;// 超出视景体右边缘
-                    if (
-                        item.position.x + r < -Math.tan(See3D.FOV_x / 2) * item.position.z
-                    ) continue;// 超出视景体左边缘
-                    if (
-                        item.position.y - r > Math.tan(See3D.FOV_y / 2) * item.position.z
-                    ) continue;// 超出视景体上边缘
-                    if (
-                        item.position.y + r < -Math.tan(See3D.FOV_y / 2) * item.position.z
-                    ) continue;// 超出视景体下边缘
-                    // console.log(r);
-                    // console.log("a");
-                    // console.log(item, itemPoints[i]);
-                    ctx.beginPath();
-                    // for (let j = 0; j < itemPoints[i][1].length; j++) {}
-                    for (let k = 0; k < itemPoints[i][0].length; k++) {
-                        // console.log(itemPoints[i][0][k]);
-                        let screenPos = new See3D.Vector2(
-                            itemPoints[i][0][k].get(0) * d / itemPoints[i][0][k].get(2) * 100,
-                            -itemPoints[i][0][k].get(1) * d / itemPoints[i][0][k].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                        );
-                        // if (item.type == "Cube") console.log(screenPos.x, screenPos.y);
-                        // ctx.arc(screenPos.x, screenPos.y, 5, 0, Math.PI * 2);
-                        if (k == 0) ctx.moveTo(screenPos.x, screenPos.y);
-                        else ctx.lineTo(screenPos.x, screenPos.y);
+                    if (itemPoints[i][2].z - r > far_d) continue;// 超过远裁面
+                    if (itemPoints[i][2].z + r < near_d) continue;// 小于近裁面
+                    // if (
+                    //     itemPoints[i][2].x - r > Math.tan(See3D.FOV_x / 2) * item.position.z
+                    // ) continue;// 超出视景体右边缘
+                    // if (
+                    //     itemPoints[i][2].x + r < -Math.tan(See3D.FOV_x / 2) * item.position.z
+                    // ) continue;// 超出视景体左边缘
+                    // if (
+                    //     itemPoints[i][2].y - r > Math.tan(See3D.FOV_y / 2) * item.position.z
+                    // ) continue;// 超出视景体上边缘
+                    // if (
+                    //     itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * item.position.z
+                    // ) continue;// 超出视景体下边缘
+                    for (let j = 0; j < items[i].planes.length; j++) {
+                        // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n <= 0) continue;
+                        ctx.beginPath();
+                        let sx, sy;
+                        for (let k = 0; k < items[i].planes[j].points.length; k++) {
+                            let point = itemPoints[i][0][items[i].planes[j].points[k]];
+                            let screenPos = new See3D.Vector2(
+                                point.get(0) * d / point.get(2) * 100,
+                                -point.get(1) * d / point.get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
+                            );
+                            if (k == 0) {
+                                ctx.moveTo(screenPos.x, screenPos.y);
+                                sx = screenPos.x;
+                                sy = screenPos.y;
+                            } else {
+                                ctx.lineTo(screenPos.x, screenPos.y);
+                            }
+                        }
+                        ctx.lineTo(sx, sy);
+                        ctx.strokeStyle = items[i].color;
                         // ctx.fillStyle = "#fff";
+                        ctx.stroke();
                         // ctx.fill();
+                        ctx.closePath();
                     }
-                    ctx.strokeStyle = "#fff";
-                    ctx.stroke();
-                    ctx.closePath();
-                    // console.log("==============");
-                    // for (let i = 0; i < item.points.length; i++) {
-                    //     let x = item.points[i].x + item.position.x;
-                    //     let y = item.points[i].y + item.position.y;
-                    //     let z = item.points[i].z + item.position.z;
-                    //     let screenPos = new See3D.Vector2(
-                    //         x * d / z * 100,
-                    //         -y * d / z * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                    //     );
-                    //     // if (item.type == "Cube") console.log(screenPos.x, screenPos.y);
-                    //     ctx.beginPath();
-                    //     ctx.arc(screenPos.x, screenPos.y, 2, 0, Math.PI * 2);
-                    //     ctx.fillStyle = "#fff";
-                    //     ctx.fill();
-                    //     ctx.closePath();
-                    // }
-                    // ctx.beginPath();
-                    // ctx.arc(0, 0, 10, 0, Math.PI * 2);
-                    // ctx.fillStyle = "#fff";
-                    // ctx.fill();
-                    // ctx.closePath();
                 }
-                // console.log(screenPos);
             }
+            return this;
+        }
+        revolution(r) {
+            let rotation = See3D.Matrix.TransRotate(new Vector3(r.get(0), r.get(1), r.get(2)));
+            let test = new Vector3(this.position);
+            test.push(1);
+            test = test * rotation;
+            this.position.x = test.x;
+            this.position.y = test.y;
+            this.position.z = test.z;
             return this;
         }
         static r(item) {
@@ -230,39 +228,46 @@
             "Planes": [
                 {
                     "n": [1, 0, 0],
-                    "p0": [1, 0, 0]
+                    "p0": [1, 0, 0],
+                    "points": [0, 2, 1, 3]
                 },
                 {
                     "n": [-1, 0, 0],
-                    "p0": [-1, 0, 0]
+                    "p0": [-1, 0, 0],
+                    "points": [4, 6, 7, 5]
                 },
                 {
                     "n": [0, 1, 0],
-                    "p0": [0, 1, 0]
+                    "p0": [0, 1, 0],
+                    "points": [6, 4, 0, 2]
                 },
                 {
                     "n": [0, -1, 0],
-                    "p0": [0, -1, 0]
+                    "p0": [0, -1, 0],
+                    "points": [5, 1, 3, 7]
                 },
                 {
                     "n": [0, 0, 1],
-                    "p0": [0, 0, 1]
+                    "p0": [0, 0, 1],
+                    "points": [0, 2, 3, 1]
                 },
                 {
                     "n": [0, 0, -1],
-                    "p0": [0, 0, -1]
+                    "p0": [0, 0, -1],
+                    "points": [4, 6, 7, 5]
                 },
             ]
         }
     };
 
     class entity extends Item {
-        constructor(type, p, s, withItemConfig = true) {
+        constructor(type, p, s, color, withItemConfig = true) {
             super(p);
             this.type = type;
             this.planes = [];
             this.points = [];
             this.s = s;
+            this.color = color;
             if (withItemConfig) {
                 this.load();
             }
@@ -275,47 +280,64 @@
             }
             // console.log(ITEM_CONFIG, this.type);
             for (let i = 0; i < config["Points"].length; i++) {
-                this.points.push(new See3D.Vector3(...config["Points"][i]));
+                let test = new See3D.Vector3(...config["Points"][i]);
+                test.x *= this.s.x;
+                test.y *= this.s.y;
+                test.z *= this.s.z;
+                this.points.push(test);
             }
             for (let i = 0; i < config["Planes"].length; i++) {
                 let arrN = config["Planes"][i]["n"];
                 let arrP0 = config["Planes"][i]["p0"];
-                arrN[0] *= this.s.get(0);
-                arrN[1] *= this.s.get(1);
-                arrN[2] *= this.s.get(2);
-                arrP0[0] *= this.s.get(0);
-                arrP0[1] *= this.s.get(1);
-                arrP0[2] *= this.s.get(2);
+                arrN[0] *= this.s.x;
+                arrN[1] *= this.s.y;
+                arrN[2] *= this.s.z;
+                arrP0[0] *= this.s.x;
+                arrP0[1] *= this.s.y;
+                arrP0[2] *= this.s.z;
                 this.planes.push(new See3D.Plane3D(
                     new Vector3(...arrN),
                     new Vector3(...arrP0),
                 ));
+                this.planes[this.planes.length - 1].points = config["Planes"][i]["points"];
             }
             return this;
         }
         rotate(r) {
             // console.log(r);
             this.rotation = new Vector3(this.rotation.get(0) + r.get(0), this.rotation.get(1) + r.get(1), this.rotation.get(2) + r.get(2));
-            let rotation = See3D.Matrix.TransRotate(-r.get(0), -r.get(1), -r.get(2));
+            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
+            // console.log(-r.get(0), -r.get(1), -r.get(2));
+            // console.log(rotation);
             for (let i = 0; i < this.points.length; i++) {
+                this.points[i].push(1);
                 this.points[i] = this.points[i] * rotation;
+                this.points[i].array.pop();
+                this.points[i] = new Vector3(...this.points[i].array);
             }
             for (let i = 0; i < this.planes.length; i++) {
+                this.planes[i].n.push(1);
                 this.planes[i].n = this.planes[i].n * rotation;
-                this.planes[i].p0 = this.planes[i].p0 * rotation;
+                this.planes[i].n.array.pop();
+                this.planes[i].n = new Vector3(...this.planes[i].n.array);
+                this.planes[i].p0 = new Vector3(this.planes[i].n);
             }
+            return this;
         }
     }
 
     class Point extends entity {
-        constructor(p = See3D.Vector3.Zero(), size = 10) {
-            super("Point", p, null, false);
+        constructor(p = See3D.Vector3.Zero(), size = 10, color = "#fff") {
+            super("Point", p, null, color, false);
             this.r = size;
         }
     }
     class Cube extends entity {
-        constructor(p = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1)) {
-            super("Cube", p, s);
+        constructor(p = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1), color = "#fff") {
+            s.x = (s.x == 0 ? s.x : s.x / 2);
+            s.y = (s.y == 0 ? s.y : s.y / 2);
+            s.z = (s.z == 0 ? s.z : s.z / 2);
+            super("Cube", p, s, color);
         }
     }
 
