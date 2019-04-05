@@ -559,21 +559,37 @@ var _Op = function () {
             key: "x",
             get: function get() {
                 return this.get(0);
+            },
+            set: function set(n) {
+                this.set(0, n);
+                return n;
             }
         }, {
             key: "y",
             get: function get() {
                 return this.get(1);
+            },
+            set: function set(n) {
+                this.set(1, n);
+                return n;
             }
         }, {
             key: "z",
             get: function get() {
                 return this.get(2);
+            },
+            set: function set(n) {
+                this.set(2, n);
+                return n;
             }
         }, {
             key: "w",
             get: function get() {
                 return this.get(3);
+            },
+            set: function set(n) {
+                this.set(3, n);
+                return n;
             }
         }]);
 

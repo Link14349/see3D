@@ -183,14 +183,30 @@
         get x() {
             return this.get(0);
         }
+        set x(n) {
+            this.set(0, n);
+            return n;
+        }
         get y() {
             return this.get(1);
+        }
+        set y(n) {
+            this.set(1, n);
+            return n;
         }
         get z() {
             return this.get(2);
         }
+        set z(n) {
+            this.set(2, n);
+            return n;
+        }
         get w() {
             return this.get(3);
+        }
+        set w(n) {
+            this.set(3, n);
+            return n;
         }
         // 点积
         operatorMod(b) {

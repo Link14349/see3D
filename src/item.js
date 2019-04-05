@@ -23,6 +23,32 @@
             this.rotation = new Vector3(this.rotation.get(0) + r.get(0), this.rotation.get(1) + r.get(1), this.rotation.get(2) + r.get(2));
             return this;
         }
+        left(d) {
+            let r = this.rotation;
+            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
+            let pos = new Vector4(d, 0, 0);
+            let p = pos * rotation;
+            this.position.x -= p.x;
+            this.position.y += p.y;
+            this.position.z += p.z;
+            return this;
+        }
+        right(d) {
+            return this.left(-d);
+        }
+        forward(d) {
+            let r = this.rotation;
+            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
+            let pos = new Vector4(0, 0, d);
+            let p = pos * rotation;
+            this.position.x -= p.x;
+            this.position.y -= p.y;
+            this.position.z += p.z;
+            return this;
+        }
+        back(d) {
+            return this.forward(-d);
+        }
     }
     class Scene extends See3D.LibraryDefineObject {
         constructor(name, game) {
@@ -96,6 +122,14 @@
             this.d = d;
             let near_d = 0.1;
             let far_d = 1000;
+            items.sort(function (x, y) {
+                let a = x.position, b = y.position;
+                let ar = a.x * a.x + a.y * a.y + a.z * a.z;
+                let br = b.x * b.x + b.y * b.y + b.z * b.z;
+                if (ar > br) return 1;
+                if (ar < br) return -1;
+                return 0;
+            });
             // console.log(d);
             // console.log("update");
             for (let i = 0; i < items.length; i++) {
@@ -146,18 +180,19 @@
                     let r = Camera.r(item);
                     if (itemPoints[i][2].z - r > far_d) continue;// 超过远裁面
                     if (itemPoints[i][2].z + r < near_d) continue;// 小于近裁面
-                    // if (
-                    //     itemPoints[i][2].x - r > Math.tan(See3D.FOV_x / 2) * item.position.z
-                    // ) continue;// 超出视景体右边缘
-                    // if (
-                    //     itemPoints[i][2].x + r < -Math.tan(See3D.FOV_x / 2) * item.position.z
-                    // ) continue;// 超出视景体左边缘
-                    // if (
-                    //     itemPoints[i][2].y - r > Math.tan(See3D.FOV_y / 2) * item.position.z
-                    // ) continue;// 超出视景体上边缘
-                    // if (
-                    //     itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * item.position.z
-                    // ) continue;// 超出视景体下边缘
+                    if (itemPoints[i][2].z < 0) continue;
+                    if (
+                        itemPoints[i][2].x - r > Math.tan(See3D.FOV_x / 2) * itemPoints[i][2].z
+                    ) continue;// 超出视景体右边缘
+                    if (
+                        itemPoints[i][2].x + r < -Math.tan(See3D.FOV_x / 2) * itemPoints[i][2].z
+                    ) continue;// 超出视景体左边缘
+                    if (
+                        itemPoints[i][2].y - r > Math.tan(See3D.FOV_y / 2) * itemPoints[i][2].z
+                    ) continue;// 超出视景体上边缘
+                    if (
+                        itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * itemPoints[i][2].z
+                    ) continue;// 超出视景体下边缘
                     for (let j = 0; j < items[i].planes.length; j++) {
                         // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n <= 0) continue;
                         ctx.beginPath();
@@ -178,7 +213,7 @@
                         }
                         ctx.lineTo(sx, sy);
                         ctx.strokeStyle = items[i].color;
-                        // ctx.fillStyle = "#fff";
+                        // ctx.fillStyle = items[i].color;
                         ctx.stroke();
                         // ctx.fill();
                         ctx.closePath();
@@ -229,7 +264,7 @@
                 {
                     "n": [1, 0, 0],
                     "p0": [1, 0, 0],
-                    "points": [0, 2, 1, 3]
+                    "points": [0, 2, 3, 1]
                 },
                 {
                     "n": [-1, 0, 0],
@@ -239,7 +274,7 @@
                 {
                     "n": [0, 1, 0],
                     "p0": [0, 1, 0],
-                    "points": [6, 4, 0, 2]
+                    "points": [4, 6, 2, 0]
                 },
                 {
                     "n": [0, -1, 0],
@@ -249,7 +284,7 @@
                 {
                     "n": [0, 0, 1],
                     "p0": [0, 0, 1],
-                    "points": [0, 2, 3, 1]
+                    "points": [2, 0, 1, 3]
                 },
                 {
                     "n": [0, 0, -1],

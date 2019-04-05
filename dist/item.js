@@ -120,6 +120,40 @@ var _Op = function () {
                 this.rotation = new Vector3(_Op.add(this.rotation.get(0), r.get(0)), _Op.add(this.rotation.get(1), r.get(1)), _Op.add(this.rotation.get(2), r.get(2)));
                 return this;
             }
+        }, {
+            key: "left",
+            value: function left(d) {
+                var r = this.rotation;
+                var rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
+                var pos = new Vector4(d, 0, 0);
+                var p = _Op.mul(pos, rotation);
+                this.position.x -= p.x;
+                this.position.y += p.y;
+                this.position.z += p.z;
+                return this;
+            }
+        }, {
+            key: "right",
+            value: function right(d) {
+                return this.left(-d);
+            }
+        }, {
+            key: "forward",
+            value: function forward(d) {
+                var r = this.rotation;
+                var rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
+                var pos = new Vector4(0, 0, d);
+                var p = _Op.mul(pos, rotation);
+                this.position.x -= p.x;
+                this.position.y -= p.y;
+                this.position.z += p.z;
+                return this;
+            }
+        }, {
+            key: "back",
+            value: function back(d) {
+                return this.forward(-d);
+            }
         }]);
 
         return Item;
@@ -231,6 +265,15 @@ var _Op = function () {
                 this.d = d;
                 var near_d = 0.1;
                 var far_d = 1000;
+                items.sort(function (x, y) {
+                    var a = x.position,
+                        b = y.position;
+                    var ar = _Op.add(_Op.add(_Op.mul(a.x, a.x), _Op.mul(a.y, a.y)), _Op.mul(a.z, a.z));
+                    var br = _Op.add(_Op.add(_Op.mul(b.x, b.x), _Op.mul(b.y, b.y)), _Op.mul(b.z, b.z));
+                    if (_Op.greater(ar, br)) return 1;
+                    if (_Op.less(ar, br)) return -1;
+                    return 0;
+                });
                 // console.log(d);
                 // console.log("update");
                 for (var i = 0; _Op.less(i, items.length); i++) {
@@ -274,18 +317,11 @@ var _Op = function () {
                         var r = Camera.r(item);
                         if (_Op.greater(_Op.sub(itemPoints[_i][2].z, r), far_d)) continue; // 超过远裁面
                         if (_Op.less(_Op.add(itemPoints[_i][2].z, r), near_d)) continue; // 小于近裁面
-                        // if (
-                        //     itemPoints[i][2].x - r > Math.tan(See3D.FOV_x / 2) * item.position.z
-                        // ) continue;// 超出视景体右边缘
-                        // if (
-                        //     itemPoints[i][2].x + r < -Math.tan(See3D.FOV_x / 2) * item.position.z
-                        // ) continue;// 超出视景体左边缘
-                        // if (
-                        //     itemPoints[i][2].y - r > Math.tan(See3D.FOV_y / 2) * item.position.z
-                        // ) continue;// 超出视景体上边缘
-                        // if (
-                        //     itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * item.position.z
-                        // ) continue;// 超出视景体下边缘
+                        if (_Op.less(itemPoints[_i][2].z, 0)) continue;
+                        if (_Op.greater(_Op.sub(itemPoints[_i][2].x, r), _Op.mul(Math.tan(_Op.div(See3D.FOV_x, 2)), itemPoints[_i][2].z))) continue; // 超出视景体右边缘
+                        if (_Op.less(_Op.add(itemPoints[_i][2].x, r), _Op.mul(-Math.tan(_Op.div(See3D.FOV_x, 2)), itemPoints[_i][2].z))) continue; // 超出视景体左边缘
+                        if (_Op.greater(_Op.sub(itemPoints[_i][2].y, r), _Op.mul(Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i][2].z))) continue; // 超出视景体上边缘
+                        if (_Op.less(_Op.add(itemPoints[_i][2].y, r), _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i][2].z))) continue; // 超出视景体下边缘
                         for (var _j2 = 0; _Op.less(_j2, items[_i].planes.length); _j2++) {
                             // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n <= 0) continue;
                             ctx.beginPath();
@@ -304,7 +340,7 @@ var _Op = function () {
                             }
                             ctx.lineTo(sx, sy);
                             ctx.strokeStyle = items[_i].color;
-                            // ctx.fillStyle = "#fff";
+                            // ctx.fillStyle = items[i].color;
                             ctx.stroke();
                             // ctx.fill();
                             ctx.closePath();
@@ -354,7 +390,7 @@ var _Op = function () {
             "Planes": [{
                 "n": [1, 0, 0],
                 "p0": [1, 0, 0],
-                "points": [0, 2, 1, 3]
+                "points": [0, 2, 3, 1]
             }, {
                 "n": [-1, 0, 0],
                 "p0": [-1, 0, 0],
@@ -362,7 +398,7 @@ var _Op = function () {
             }, {
                 "n": [0, 1, 0],
                 "p0": [0, 1, 0],
-                "points": [6, 4, 0, 2]
+                "points": [4, 6, 2, 0]
             }, {
                 "n": [0, -1, 0],
                 "p0": [0, -1, 0],
@@ -370,7 +406,7 @@ var _Op = function () {
             }, {
                 "n": [0, 0, 1],
                 "p0": [0, 0, 1],
-                "points": [0, 2, 3, 1]
+                "points": [2, 0, 1, 3]
             }, {
                 "n": [0, 0, -1],
                 "p0": [0, 0, -1],

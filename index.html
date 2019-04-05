@@ -46,32 +46,20 @@
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
-    let camera = new See3D.Camera(new See3D.Vector3(0, 0, -100), "camera", scene);
-    let point1 = new See3D.Point(new See3D.Vector3(0, -5, 0), 3);
-    let point2 = new See3D.Point(new See3D.Vector3(0, 5, 0), 3);
-    let point3 = new See3D.Point(new See3D.Vector3(5, 0, 0), 3);
-    let point4 = new See3D.Point(new See3D.Vector3(-5, 0, 0), 3);
-    let point5 = new See3D.Point(new See3D.Vector3(0, 5, 0), 3);
-    let point6 = new See3D.Point(new See3D.Vector3(0, -5, 0), 3);
-    let cube = new See3D.Cube(new See3D.Vector3(0, 2.5, -95), new See3D.Vector3(1, 1, 1), "#f00");
-    let grand = new See3D.Cube(new See3D.Vector3(0, -10, 0), new See3D.Vector3(10, 20, 10), "#fff");
+    let camera = new See3D.Camera(new See3D.Vector3(0, 10, -100), "camera", scene);
+    let cube = new See3D.Cube(new See3D.Vector3(0, 10, -95), new See3D.Vector3(1, 1, 1), "#0ff");
+    let tower = new See3D.Cube(new See3D.Vector3(0, 50, 0), new See3D.Vector3(10, 100, 10), "#f0f");
     let signs = [];
-    for (let i = 0; i < 500; i++) {
-        let c = new See3D.Cube(new See3D.Vector3(See3D.randint(-100, 100), -10, See3D.randint(-100, 100)), new See3D.Vector3(1, 0.5, 1), "#ff0");
+    for (let i = 0; i < 200; i++) {
+        let c = new See3D.Cube(new See3D.Vector3(See3D.randint(-500, 500), 0, See3D.randint(-500, 500)), new See3D.Vector3(See3D.rand(0.1, 5), See3D.rand(0.1, 2), See3D.rand(0.1, 5)), "#ff0");
         scene.push(c);
         signs.push(c);
     }
     scene
         .push(camera)
         .camera("camera")
-        .push(point1)
-        .push(point2)
-        .push(point3)
-        .push(point4)
-        .push(point5)
-        .push(point6)
         .push(cube)
-        .push(grand)
+        .push(tower)
     ;
     game
         .push(scene)
@@ -90,20 +78,16 @@
     game.renderLoop(
         function PhyUpdate(self) {
             if (keyCode == 38) {// up
-                camera.move(new Vector3(0, 0, 1));
-                cube.move(new Vector3(0, 0, 1));
+                camera.forward(1);
             }
             if (keyCode == 40) {// down
-                camera.move(new Vector3(0, 0, -1));
-                cube.move(new Vector3(0, 0, -1));
+                camera.back(1);
             }
             if (keyCode == 37) {// left
-                camera.move(new Vector3(-1, 0, 0));
-                cube.move(new Vector3(-1, 0, 0));
+                camera.left(1);
             }
             if (keyCode == 39) {// right
-                camera.move(new Vector3(1, 0, 0));
-                cube.move(new Vector3(1, 0, 0));
+                camera.right(1);
             }
             if (keyCode == 65) {// a
                 camera.rotate(new Vector3(0, -Math.PI / 180, 0));
@@ -122,6 +106,12 @@
                 // camera.revolution(new Vector3(Math.PI / 180, 0, 0));
             }
             cube.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
+            // camera.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
+            let tmp = tower.position.operatorSub(camera.position);
+            tower.rotate(new Vector3(0, Math.PI / 180 * tmp.mod() / 180, 0));
+            // for (let i = 0; i < signs.length; i++) {
+            //     signs[i].rotate(new Vector3(Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1)));
+            // }
         },
         function ViewUpdate(self) {
             let ctx = self.ctx;
@@ -132,7 +122,7 @@
             ctx.fillStyle = "#fff";
             ctx.fillText("FPS: " + self.fps, self.width(), 0);
             ctx.fillText("Camera Status", self.width(), 20);
-            ctx.fillText("Position (" + camera.position.x + ", " + camera.position.y + ", " + camera.position.z + ")", self.width(), 40);
+            ctx.fillText("Position (" + camera.position.x.toFixed(2) + ", " + camera.position.y.toFixed(2) + ", " + camera.position.z.toFixed(2) + ")", self.width(), 40);
             ctx.fillText("Rotation (" + (camera.rotation.x / Math.PI * 180).toFixed(2) + ", " + (camera.rotation.y / Math.PI * 180).toFixed(2) + ", " + (camera.rotation.z / Math.PI * 180).toFixed(2) + ")", self.width(), 60);
             ctx.closePath();
         }
