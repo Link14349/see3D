@@ -8,6 +8,7 @@
     <script type="text/javascript" src="dist/IO.js"></script>
     <script type="text/javascript" src="dist/math.js"></script>
     <script type="text/javascript" src="dist/item.js"></script>
+    <script type="text/javascript" src="dist/Physics.js"></script>
 
     <!--Tests-->
     <script type="text/javascript">
@@ -47,8 +48,8 @@
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
     let camera = new See3D.Camera(new See3D.Vector3(0, 10, -100), "camera", scene);
-    let cube = new See3D.Cube(new See3D.Vector3(0, 10, -95), new See3D.Vector3(1, 1, 1), "#0ff");
-    let tower = new See3D.Cube(new See3D.Vector3(0, 50, 0), new See3D.Vector3(10, 100, 10), "#f0f");
+    let cube = new See3D.Cube(new See3D.Vector3(0, 10, -110), new See3D.Vector3(5, 5, 5), "#0ff");
+    let tower = new See3D.Cube(new See3D.Vector3(0, 50, 0), new See3D.Vector3(100, 100, 100), "#f0f");
     let signs = [];
     for (let i = 0; i < 200; i++) {
         let c = new See3D.Cube(new See3D.Vector3(See3D.randint(-500, 500), 0, See3D.randint(-500, 500)), new See3D.Vector3(See3D.rand(0.1, 5), See3D.rand(0.1, 2), See3D.rand(0.1, 5)), "#ff0");
@@ -74,6 +75,8 @@
     document.onkeyup = function (e) {
         keyCode = -1;
     };
+    camera.RigidBody();
+    // cube.RigidBody();
     // game.render();
     game.renderLoop(
         function PhyUpdate(self) {
@@ -105,10 +108,10 @@
                 camera.rotate(new Vector3(Math.PI / 180, 0, 0));
                 // camera.revolution(new Vector3(Math.PI / 180, 0, 0));
             }
-            cube.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
+            // cube.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
             // camera.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
-            let tmp = tower.position.operatorSub(camera.position);
-            tower.rotate(new Vector3(0, Math.PI / 180 * tmp.mod() / 180, 0));
+            // let tmp = tower.position.operatorSub(camera.position);
+            // tower.rotate(new Vector3(0, Math.PI / 180 * tmp.mod() / 180, 0));
             // for (let i = 0; i < signs.length; i++) {
             //     signs[i].rotate(new Vector3(Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1)));
             // }

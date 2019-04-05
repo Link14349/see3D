@@ -12,7 +12,7 @@ shields = ["dist", ".idea", ".git"]
 same = root
 mainContent = ""
 
-files = ["index.js", "IO.js", "math.js", "item.js"]
+files = ["index.js", "IO.js", "math.js", "item.js", "Physics.js"]
 for i in files:
         # print(i)
         if os.path.isfile(os.path.join(root, i)) and i.find(".map") == -1:

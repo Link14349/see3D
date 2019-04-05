@@ -428,6 +428,11 @@ var See3D = function () {
             value: function transType() {
                 return null;
             }
+        }], [{
+            key: "method",
+            value: function method(n, v) {
+                this.prototype[n] = v;
+            }
         }]);
 
         return LibraryDefineObject;

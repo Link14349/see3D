@@ -1072,8 +1072,14 @@ var _Op = function () {
 
             var _this12 = _possibleConstructorReturn(this, (Plane3D.__proto__ || Object.getPrototypeOf(Plane3D)).call(this, "Plane"));
 
-            _this12.n = new Vector3(n); // 法线向量
-            _this12.p0 = new Vector3(p0); // 平面上一点
+            if (_Op.less(arguments.length, 2)) {
+                var p = n;
+                _this12.n = new Vector3(p.n);
+                _this12.p0 = new Vector3(p.p0);
+            } else {
+                _this12.n = new Vector3(n); // 法线向量
+                _this12.p0 = new Vector3(p0); // 平面上一点
+            }
             return _this12;
         }
 

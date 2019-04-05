@@ -251,6 +251,9 @@ class See3D {
         transType() {
             return null;
         }
+        static method(n, v) {
+            this.prototype[n] = v;
+        }
     }
     function checkType(obj, type) {
         return obj.type == type;

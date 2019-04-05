@@ -1,6 +1,6 @@
 'bpo enable';
 
-!function () {
+!function (See3D) {
     let lib = new See3D.Library("View");
 
     class Item extends See3D.LibraryDefineObject {
@@ -8,8 +8,24 @@
             super("Item");
             this.position = p;
             this.rotation = See3D.Vector3.Zero();
+            this.scene = null;
+            this.updateFunList = Item.updateFunList.slice(0);
             // console.log(r);
             // this.rotate(r);
+        }
+        static pushUpdate(fun) {
+            this.updateFunList.push(fun);
+            return this;
+        }
+        pushUpdate(fun) {
+            this.updateFunList.push(fun);
+            return this;
+        }
+        update() {
+            for (let i = 0; i < this.updateFunList.length; i++) {
+                this.updateFunList[i](this);
+            }
+            return this;
         }
         move(d) {
             let tmp = new Vector(this.position);
@@ -50,6 +66,8 @@
             return this.forward(-d);
         }
     }
+    Item.updateFunList = [];
+
     class Scene extends See3D.LibraryDefineObject {
         constructor(name, game) {
             super("Scene");
@@ -63,6 +81,7 @@
             return this.__name;
         }
         push(item) {
+            item.scene = this;
             if (item.type == "Camera") {
                 let c = item;
                 this.cameras[c.name] = c;
@@ -133,6 +152,7 @@
             // console.log(d);
             // console.log("update");
             for (let i = 0; i < items.length; i++) {
+                items[i].update();
                 if (items[i].type == "Point") {
                     let p = new See3D.Vector3(items[i].position);
                     p.array.push(1);
@@ -159,13 +179,26 @@
                 // if (items[i].type == "Cube")
                 //     console.log(p * trans);
             }
+            this.update();
             // console.log(itemPoints);
             for (let i = 0; i < itemPoints.length; i++) {
                 // console.log(itemPoints[i].get(2));
                 // console.log(itemPoints[i]);
                 let item = items[i];
                 if (item.type == "Point") {
-                    if (itemPoints[i].get(2) < near_d || itemPoints[i].get(2) > far_d) continue;// 超出远近裁面
+                    if (itemPoints[i].z < near_d || itemPoints[i].z > far_d) continue;// 超出远近裁面
+                    if (
+                        itemPoints[i].x > Math.tan(See3D.FOV_x / 2) * itemPoints[i].z
+                    ) continue;// 超出视景体右边缘
+                    if (
+                        itemPoints[i].x < -Math.tan(See3D.FOV_x / 2) * itemPoints[i].z
+                    ) continue;// 超出视景体左边缘
+                    if (
+                        itemPoints[i].y > Math.tan(See3D.FOV_y / 2) * itemPoints[i].z
+                    ) continue;// 超出视景体上边缘
+                    if (
+                        itemPoints[i].y < -Math.tan(See3D.FOV_y / 2) * itemPoints[i].z
+                    ) continue;// 超出视景体下边缘
                     // console.log("a");
                     let screenPos = new See3D.Vector2(
                         itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
@@ -200,8 +233,8 @@
                         for (let k = 0; k < items[i].planes[j].points.length; k++) {
                             let point = itemPoints[i][0][items[i].planes[j].points[k]];
                             let screenPos = new See3D.Vector2(
-                                point.get(0) * d / point.get(2) * 100,
-                                -point.get(1) * d / point.get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
+                                point.x * d / point.z * 100,
+                                -point.y * d / point.z * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
                             );
                             if (k == 0) {
                                 ctx.moveTo(screenPos.x, screenPos.y);
@@ -263,32 +296,32 @@
             "Planes": [
                 {
                     "n": [1, 0, 0],
-                    "p0": [1, 0, 0],
+                    "p0": [0.5, 0, 0],
                     "points": [0, 2, 3, 1]
                 },
                 {
                     "n": [-1, 0, 0],
-                    "p0": [-1, 0, 0],
+                    "p0": [-0.5, 0, 0],
                     "points": [4, 6, 7, 5]
                 },
                 {
                     "n": [0, 1, 0],
-                    "p0": [0, 1, 0],
+                    "p0": [0, 0.5, 0],
                     "points": [4, 6, 2, 0]
                 },
                 {
                     "n": [0, -1, 0],
-                    "p0": [0, -1, 0],
+                    "p0": [0, -0.5, 0],
                     "points": [5, 1, 3, 7]
                 },
                 {
                     "n": [0, 0, 1],
-                    "p0": [0, 0, 1],
+                    "p0": [0, 0, 0.5],
                     "points": [2, 0, 1, 3]
                 },
                 {
                     "n": [0, 0, -1],
-                    "p0": [0, 0, -1],
+                    "p0": [0, 0, -0.5],
                     "points": [4, 6, 7, 5]
                 },
             ]
@@ -396,4 +429,4 @@
     }
     See3D.lib("View");
     lib.toSee3D();
-}();
+}(See3D);

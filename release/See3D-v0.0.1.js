@@ -432,6 +432,11 @@ var See3D = function () {
             value: function transType() {
                 return null;
             }
+        }], [{
+            key: "method",
+            value: function method(n, v) {
+                this.prototype[n] = v;
+            }
         }]);
 
         return LibraryDefineObject;
@@ -1743,8 +1748,14 @@ var _Op = function () {
 
             var _this12 = _possibleConstructorReturn(this, (Plane3D.__proto__ || Object.getPrototypeOf(Plane3D)).call(this, "Plane"));
 
-            _this12.n = new Vector3(n); // 法线向量
-            _this12.p0 = new Vector3(p0); // 平面上一点
+            if (_Op.less(arguments.length, 2)) {
+                var p = n;
+                _this12.n = new Vector3(p.n);
+                _this12.p0 = new Vector3(p.p0);
+            } else {
+                _this12.n = new Vector3(n); // 法线向量
+                _this12.p0 = new Vector3(p0); // 平面上一点
+            }
             return _this12;
         }
 
@@ -2336,7 +2347,7 @@ var _Op = function () {
     };
 }();
 
-!function () {
+!function (See3D) {
     var lib = new See3D.Library("View");
 
     var Item = function (_See3D$LibraryDefineO) {
@@ -2351,6 +2362,7 @@ var _Op = function () {
 
             _this.position = p;
             _this.rotation = See3D.Vector3.Zero();
+            _this.scene = null;
             // console.log(r);
             // this.rotate(r);
             return _this;
@@ -2430,6 +2442,7 @@ var _Op = function () {
         _createClass(Scene, [{
             key: "push",
             value: function push(item) {
+                item.scene = this;
                 if (_Op.equal(item.type, "Camera")) {
                     var c = item;
                     this.cameras[c.name] = c;
@@ -2505,9 +2518,8 @@ var _Op = function () {
                 var _scene$dom = this.scene.dom,
                     sw = _scene$dom.width,
                     sh = _scene$dom.height;
-                var _See3D = See3D,
-                    FOV_x = _See3D.FOV_x,
-                    FOV_y = _See3D.FOV_y;
+                var FOV_x = See3D.FOV_x,
+                    FOV_y = See3D.FOV_y;
 
                 var itemPoints = [];
                 var move = See3D.Matrix.TransMoveInverse(this.position);
@@ -2557,7 +2569,11 @@ var _Op = function () {
                     // console.log(itemPoints[i]);
                     var item = items[_i];
                     if (_Op.equal(item.type, "Point")) {
-                        if (_Op.less(itemPoints[_i].get(2), near_d) || _Op.greater(itemPoints[_i].get(2), far_d)) continue; // 超出远近裁面
+                        if (_Op.less(itemPoints[_i].z, near_d) || _Op.greater(itemPoints[_i].z, far_d)) continue; // 超出远近裁面
+                        if (_Op.greater(itemPoints[_i].x, _Op.mul(Math.tan(_Op.div(See3D.FOV_x, 2)), itemPoints[_i].z))) continue; // 超出视景体右边缘
+                        if (_Op.less(itemPoints[_i].x, _Op.mul(-Math.tan(_Op.div(See3D.FOV_x, 2)), itemPoints[_i].z))) continue; // 超出视景体左边缘
+                        if (_Op.greater(itemPoints[_i].y, _Op.mul(Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i].z))) continue; // 超出视景体上边缘
+                        if (_Op.less(itemPoints[_i].y, _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i].z))) continue; // 超出视景体下边缘
                         // console.log("a");
                         var screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
                         ctx.beginPath();
@@ -2581,7 +2597,7 @@ var _Op = function () {
                                 sy = void 0;
                             for (var k = 0; _Op.less(k, items[_i].planes[_j2].points.length); k++) {
                                 var point = itemPoints[_i][0][items[_i].planes[_j2].points[k]];
-                                var _screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(point.get(0), d), point.get(2)), 100), _Op.mul(_Op.div(_Op.mul(-point.get(1), d), point.get(2)), 100));
+                                var _screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(point.x, d), point.z), 100), _Op.mul(_Op.div(_Op.mul(-point.y, d), point.z), 100));
                                 if (_Op.equal(k, 0)) {
                                     ctx.moveTo(_screenPos.x, _screenPos.y);
                                     sx = _screenPos.x;
@@ -2804,5 +2820,139 @@ var _Op = function () {
     }
     See3D.lib("View");
     lib.toSee3D();
-}();
+}(See3D);
 //# sourceMappingURL=item.js.map
+
+
+// Physics.js
+
+"use strict";
+
+var _Op = function () {
+    'bpo disable';
+
+    return {
+        add: function add(a, b) {
+            if (a.operatorAdd) return a.operatorAdd(b);else return a + b;
+        },
+        selfAdd: function selfAdd(a, b) {
+            if (a.operatorSelfAdd) return a.operatorSelfAdd(b);else return a += b;
+        },
+        sub: function sub(a, b) {
+            if (a.operatorSub) return a.operatorSub(b);else return a - b;
+        },
+        selfSub: function selfSub(a, b) {
+            if (a.operatorSelfSub) return a.operatorSelfSub(b);else return a -= b;
+        },
+        mul: function mul(a, b) {
+            if (a.operatorMul) return a.operatorMul(b);else return a * b;
+        },
+        selfMul: function selfMul(a, b) {
+            if (a.operatorSelfMul) return a.operatorSelfMul(b);else return a *= b;
+        },
+        div: function div(a, b) {
+            if (a.operatorDiv) return a.operatorDiv(b);else return a / b;
+        },
+        selfDiv: function selfDiv(a, b) {
+            if (a.operatorSelfDiv) return a.operatorSelfDiv(b);else return a /= b;
+        },
+        mod: function mod(a, b) {
+            if (a.operatorMod) return a.operatorMod(b);else return a % b;
+        },
+        selfMod: function selfMod(a, b) {
+            if (a.operatorSelfMod) return a.operatorSelfMod(b);else return a %= b;
+        },
+        pow: function pow(a, b) {
+            if (a.operatorPow) return a.operatorPow(b);else return Math.pow(a, b);
+        },
+        binaryAnd: function binaryAnd(a, b) {
+            if (a.operatorBinaryAnd) return a.operatorBinaryAnd(b);else return a & b;
+        },
+        binaryOr: function binaryOr(a, b) {
+            if (a.operatorBinaryOr) return a.operatorBinaryOr(b);else return a | b;
+        },
+        binaryXor: function binaryXor(a, b) {
+            if (a.operatorBinaryXor) return a.operatorBinaryXor(b);else return a ^ b;
+        },
+        binaryLShift: function binaryLShift(a, b) {
+            if (a.operatorBinaryLShift) return a.operatorBinaryLShift(b);else return a << b;
+        },
+        binaryRShift: function binaryRShift(a, b) {
+            if (a.operatorBinaryRShift) return a.operatorBinaryRShift(b);else return a >> b;
+        },
+        less: function less(a, b) {
+            if (a.operatorLess) return a.operatorLess(b);else if (b.operatorGreater) return b.operatorGreater(a);else if (a.operatorGreaterEqual) return !a.operatorGreaterEqual(b);else return a < b;
+        },
+        greater: function greater(a, b) {
+            if (a.operatorGreater) return a.operatorGreater(b);else if (b.operatorLess) return b.operatorLess(a);else if (a.operatorLessEqual) return !a.operatorLessEqual(b);else return a > b;
+        },
+        lessEqual: function lessEqual(a, b) {
+            if (a.operatorLessEqual) return a.operatorLessEqual(b);else if (b.operatorGreaterEqual) return b.operatorGreaterEqual(a);else if (a.operatorGreater) return !a.operatorGreater(b);else return a <= b;
+        },
+        greaterEqual: function greaterEqual(a, b) {
+            if (a.operatorGreaterEqual) return a.operatorGreaterEqual(b);else if (b.operatorLessEqual) return b.operatorLessEqual(a);else if (a.operatorLess) return !a.operatorLess(b);else return a >= b;
+        },
+        equal: function equal(a, b) {
+            if (a.operatorEqual) return a.operatorEqual(b);else if (a.operatorNotEqual) return !a.operatorNotEqual(b);else if (b.operatorEqual) return b.operatorEqual(a);else if (b.operatorNotEqual) return !b.operatorNotEqual(a);else return a == b;
+        },
+        notEqual: function notEqual(a, b) {
+            if (a.operatorNotEqual) return a.operatorNotEqual(b);else if (a.operatorEqual) return !a.operatorEqual(b);else if (b.operatorNotEqual) return b.operatorNotEqual(a);else if (b.operatorEqual) return !b.operatorEqual(a);else return a != b;
+        }
+    };
+}();
+
+!function (See3D) {
+    var lib = new See3D.Library("Physics");
+
+    function crash(item1, item2) {
+        if (item1.type == "Camera") {
+            if (item2.type == "Camera") return item1.position.x == item2.position.x && item1.position.y == item2.position.y && item1.position.z == item2.position.z;
+            return crash(item2, item1); // 因为如果item1和item2相撞了，那么item2就也和item1相撞了
+        }
+        if (item1.type == "Point") {
+            if (item2.type == "Point" || item2.type == "Camera") return item1.position.x == item2.position.x && item1.position.y == item2.position.y && item1.position.z == item2.position.z;
+            return false;
+        }
+        for (var i = 0; i < item1.planes.length; i++) {
+            if (item2.type == "Point" || item2.type == "Camera") {
+                var plane = new See3D.Plane3D(item1.planes[i]);
+                plane.p0 = plane.p0 + item1.position;
+                if (See3D.PointPositionWithPlane(item2.position, plane) > 0) return false;
+            } else {
+                for (var j = 0; j < item2.points.length; j++) {
+                    var point = new See3D.Vector3(item2.points[j]);
+                    var _plane = new See3D.Plane3D(item1.planes[i]);
+                    point = point + item2.position;
+                    _plane.p0 = _plane.p0 + item1.position;
+                    // console.log(point, plane);
+                    if (See3D.PointPositionWithPlane(point, _plane) > 0) return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    See3D.Item.method("crash", function (item) {
+        return crash(this, item);
+    });
+    See3D.Item.method("crashAny", function () {
+        var items = [];
+        var sceneItems = this.scene.items;
+        for (var i = 0; i < sceneItems.length; i++) {
+            if (crash(this, sceneItems[i])) items.push(sceneItems[i]);
+        }
+        return items;
+    });
+    lib.define("crash", crash);
+
+    lib.trans();
+    See3D.library(lib);
+    See3D.load("Physics");
+    if (See3D.DEBUG) {
+        See3D.loadGlobal("Physics"); // 将库加入浏览器全局
+        lib.global(); // 将库API加入浏览器全局
+    }
+    See3D.lib("Physics");
+    lib.toSee3D();
+}(See3D);
+//# sourceMappingURL=Physics.js.map

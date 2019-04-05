@@ -709,8 +709,14 @@
     class Plane3D extends See3D.LibraryDefineObject {
         constructor(n, p0) {
             super("Plane");
-            this.n = new Vector3(n);// 法线向量
-            this.p0 = new Vector3(p0);// 平面上一点
+            if (arguments.length < 2) {
+                let p = n;
+                this.n = new Vector3(p.n);
+                this.p0 = new Vector3(p.p0);
+            } else {
+                this.n = new Vector3(n);// 法线向量
+                this.p0 = new Vector3(p0);// 平面上一点
+            }
         }
     }
 
