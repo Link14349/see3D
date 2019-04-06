@@ -101,6 +101,7 @@ var _Op = function () {
             _this.rotation = See3D.Vector3.Zero();
             _this.scene = null;
             _this.updateFunList = Item.updateFunList.slice(0);
+            _this.index = -1;
             // console.log(r);
             // this.rotate(r);
             return _this;
@@ -121,6 +122,14 @@ var _Op = function () {
                 return this;
             }
         }, {
+            key: "del",
+            value: function del() {
+                if (this.scene && _Op.greater(this.index, -1)) {
+                    this.scene.del(this.index);
+                    this.index = -1;
+                }
+            }
+        }, {
             key: "move",
             value: function move(d) {
                 var tmp = new Vector(this.position);
@@ -133,7 +142,7 @@ var _Op = function () {
         }, {
             key: "rotate",
             value: function rotate(r) {
-                this.rotation = new Vector3(_Op.add(this.rotation.get(0), r.get(0)), _Op.add(this.rotation.get(1), r.get(1)), _Op.add(this.rotation.get(2), r.get(2)));
+                this.rotation = new Vector3(_Op.sub(this.rotation.get(0), r.get(0)), _Op.sub(this.rotation.get(1), r.get(1)), _Op.sub(this.rotation.get(2), r.get(2)));
                 return this;
             }
         }, {
@@ -208,8 +217,15 @@ var _Op = function () {
                     this.cameras[c.name] = c;
                     if (!this.use) this.use = c;
                 } else {
+                    item.index = this.items.length;
                     this.items.push(item);
                 }
+                return this;
+            }
+        }, {
+            key: "del",
+            value: function del(index) {
+                this.items.splice(index, 1);
                 return this;
             }
         }, {
@@ -317,7 +333,8 @@ var _Op = function () {
                         for (var _j = 0; _Op.less(_j, items[i].planes.length); _j++) {
                             var _p2 = _Op.add(items[i].planes[_j].p0, items[i].position);
                             _p2.array.push(1);
-                            itemPoints[_Op.sub(itemPoints.length, 1)][1].push(new See3D.Plane3D(items[i].planes[_j].n, _Op.mul(_p2, trans)));
+                            _p2 = _Op.mul(_p2, trans);
+                            itemPoints[_Op.sub(itemPoints.length, 1)][1].push(new See3D.Plane3D(new Vector3(_p2.array), new Vector3(_p2.array)));
                         }
                         // console.log(itemPoints[itemPoints.length - 1]);
                     }
@@ -353,12 +370,28 @@ var _Op = function () {
                         if (_Op.greater(_Op.sub(itemPoints[_i][2].y, r), _Op.mul(Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i][2].z))) continue; // 超出视景体上边缘
                         if (_Op.less(_Op.add(itemPoints[_i][2].y, r), _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i][2].z))) continue; // 超出视景体下边缘
                         for (var _j2 = 0; _Op.less(_j2, items[_i].planes.length); _j2++) {
-                            // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n <= 0) continue;
+                            // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n > 0) continue;
+                            var crop = function crop(pre, now) {};
+
                             ctx.beginPath();
                             var sx = void 0,
                                 sy = void 0;
+                            var per = new Vector3(items[_i].planes[_j2].points[_Op.sub(items[_i].planes[_j2].points.length, 1)]);
                             for (var k = 0; _Op.less(k, items[_i].planes[_j2].points.length); k++) {
-                                var point = itemPoints[_i][0][items[_i].planes[_j2].points[k]];
+                                var point = new Vector3(itemPoints[_i][0][items[_i].planes[_j2].points[k]]);
+                                if (_Op.less(point.z, near_d)) {// 超出近裁面
+
+                                }
+                                if (_Op.greater(point.z, far_d)) {// 超出远裁面
+                                }
+                                if (_Op.greater(point.x, _Op.mul(Math.tan(_Op.div(See3D.FOV_x, 2)), point.z)) // 超出视景体右边缘
+                                ) {}
+                                if (_Op.less(point.x, _Op.mul(-Math.tan(_Op.div(See3D.FOV_x, 2)), point.z)) // 超出视景体左边缘
+                                ) {}
+                                if (_Op.greater(point.y, _Op.mul(Math.tan(_Op.div(See3D.FOV_y, 2)), point.z)) // 超出视景体上边缘
+                                ) {}
+                                if (_Op.less(point.y, _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), point.z)) // 超出视景体下边缘
+                                ) {}
                                 var _screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(point.x, d), point.z), 100), _Op.mul(_Op.div(_Op.mul(-point.y, d), point.z), 100));
                                 if (_Op.equal(k, 0)) {
                                     ctx.moveTo(_screenPos.x, _screenPos.y);
@@ -367,6 +400,7 @@ var _Op = function () {
                                 } else {
                                     ctx.lineTo(_screenPos.x, _screenPos.y);
                                 }
+                                per = new See3D.Vector3(point);
                             }
                             ctx.lineTo(sx, sy);
                             ctx.strokeStyle = items[_i].color;
@@ -419,37 +453,38 @@ var _Op = function () {
             "Points": [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]],
             "Planes": [{
                 "n": [1, 0, 0],
-                "p0": [0.5, 0, 0],
+                "p0": [1, 0, 0],
                 "points": [0, 2, 3, 1]
             }, {
                 "n": [-1, 0, 0],
-                "p0": [-0.5, 0, 0],
+                "p0": [-1, 0, 0],
                 "points": [4, 6, 7, 5]
             }, {
                 "n": [0, 1, 0],
-                "p0": [0, 0.5, 0],
+                "p0": [0, 1, 0],
                 "points": [4, 6, 2, 0]
             }, {
                 "n": [0, -1, 0],
-                "p0": [0, -0.5, 0],
+                "p0": [0, -1, 0],
                 "points": [5, 1, 3, 7]
             }, {
                 "n": [0, 0, 1],
-                "p0": [0, 0, 0.5],
+                "p0": [0, 0, 1],
                 "points": [2, 0, 1, 3]
             }, {
                 "n": [0, 0, -1],
-                "p0": [0, 0, -0.5],
+                "p0": [0, 0, -1],
                 "points": [4, 6, 7, 5]
             }]
         }
     };
+    // console.log(ITEM_CONFIG["Cube"]);
 
     var entity = function (_Item2) {
         _inherits(entity, _Item2);
 
-        function entity(type, p, s, color) {
-            var withItemConfig = _Op.greater(arguments.length, 4) && arguments[4] !== undefined ? arguments[4] : true;
+        function entity(type, p, s, color, name) {
+            var withItemConfig = _Op.greater(arguments.length, 5) && arguments[5] !== undefined ? arguments[5] : true;
 
             _classCallCheck(this, entity);
 
@@ -458,6 +493,7 @@ var _Op = function () {
             _this4.type = type;
             _this4.planes = [];
             _this4.points = [];
+            _this4.name = name;
             _this4.s = s;
             _this4.color = color;
             if (withItemConfig) {
@@ -476,15 +512,17 @@ var _Op = function () {
                 }
                 // console.log(ITEM_CONFIG, this.type);
                 for (var i = 0; _Op.less(i, config["Points"].length); i++) {
-                    var test = new (Function.prototype.bind.apply(See3D.Vector3, [null].concat(_toConsumableArray(config["Points"][i]))))();
+                    var test = new (Function.prototype.bind.apply(See3D.Vector3, [null].concat(_toConsumableArray(Array.apply(undefined, _toConsumableArray(config["Points"][i]))))))();
                     test.x *= this.s.x;
                     test.y *= this.s.y;
                     test.z *= this.s.z;
                     this.points.push(test);
                 }
+                // console.log(config);
                 for (var _i2 = 0; _Op.less(_i2, config["Planes"].length); _i2++) {
-                    var arrN = config["Planes"][_i2]["n"];
-                    var arrP0 = config["Planes"][_i2]["p0"];
+                    var arrN = Array.apply(undefined, _toConsumableArray(config["Planes"][_i2]["n"]));
+                    var arrP0 = Array.apply(undefined, _toConsumableArray(config["Planes"][_i2]["p0"]));
+                    // console.log(arrN);
                     arrN[0] *= this.s.x;
                     arrN[1] *= this.s.y;
                     arrN[2] *= this.s.z;
@@ -492,8 +530,9 @@ var _Op = function () {
                     arrP0[1] *= this.s.y;
                     arrP0[2] *= this.s.z;
                     this.planes.push(new See3D.Plane3D(new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(arrN))))(), new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(arrP0))))()));
-                    this.planes[_Op.sub(this.planes.length, 1)].points = config["Planes"][_i2]["points"];
+                    this.planes[_Op.sub(this.planes.length, 1)].points = Array.apply(undefined, _toConsumableArray(config["Planes"][_i2]["points"]));
                 }
+                // console.log(this);
                 return this;
             }
         }, {
@@ -531,10 +570,11 @@ var _Op = function () {
             var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : See3D.Vector3.Zero();
             var size = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : 10;
             var color = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : "#fff";
+            var name = _Op.greater(arguments.length, 3) && arguments[3] !== undefined ? arguments[3] : "";
 
             _classCallCheck(this, Point);
 
-            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, "Point", p, null, color, false));
+            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, "Point", p, null, color, name, false));
 
             _this5.r = size;
             return _this5;
@@ -550,13 +590,15 @@ var _Op = function () {
             var p = _Op.greater(arguments.length, 0) && arguments[0] !== undefined ? arguments[0] : See3D.Vector3.Zero();
             var s = _Op.greater(arguments.length, 1) && arguments[1] !== undefined ? arguments[1] : new See3D.Vector3(1, 1, 1);
             var color = _Op.greater(arguments.length, 2) && arguments[2] !== undefined ? arguments[2] : "#fff";
+            var name = _Op.greater(arguments.length, 3) && arguments[3] !== undefined ? arguments[3] : "";
 
             _classCallCheck(this, Cube);
 
             s.x = _Op.equal(s.x, 0) ? s.x : _Op.div(s.x, 2);
             s.y = _Op.equal(s.y, 0) ? s.y : _Op.div(s.y, 2);
             s.z = _Op.equal(s.z, 0) ? s.z : _Op.div(s.z, 2);
-            return _possibleConstructorReturn(this, (Cube.__proto__ || Object.getPrototypeOf(Cube)).call(this, "Cube", p, s, color));
+            return _possibleConstructorReturn(this, (Cube.__proto__ || Object.getPrototypeOf(Cube)).call(this, "Cube", p, s, color, name));
+            // console.log(this);
         }
 
         return Cube;

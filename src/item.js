@@ -10,6 +10,7 @@
             this.rotation = See3D.Vector3.Zero();
             this.scene = null;
             this.updateFunList = Item.updateFunList.slice(0);
+            this.index = -1;
             // console.log(r);
             // this.rotate(r);
         }
@@ -27,6 +28,12 @@
             }
             return this;
         }
+        del() {
+            if (this.scene && this.index > -1) {
+                this.scene.del(this.index);
+                this.index = -1;
+            }
+        }
         move(d) {
             let tmp = new Vector(this.position);
             tmp.push(1);
@@ -36,7 +43,7 @@
             return this;
         }
         rotate(r) {
-            this.rotation = new Vector3(this.rotation.get(0) + r.get(0), this.rotation.get(1) + r.get(1), this.rotation.get(2) + r.get(2));
+            this.rotation = new Vector3(this.rotation.get(0) - r.get(0), this.rotation.get(1) - r.get(1), this.rotation.get(2) - r.get(2));
             return this;
         }
         left(d) {
@@ -87,8 +94,13 @@
                 this.cameras[c.name] = c;
                 if (!this.use) this.use = c;
             } else {
+                item.index = this.items.length;
                 this.items.push(item);
             }
+            return this;
+        }
+        del(index) {
+            this.items.splice(index, 1);
             return this;
         }
         get ctx() {
@@ -170,8 +182,9 @@
                     for (let j = 0; j < items[i].planes.length; j++) {
                         let p = items[i].planes[j].p0 + items[i].position;
                         p.array.push(1);
+                        p = p * trans;
                         itemPoints[itemPoints.length - 1][1].push(new See3D.Plane3D(
-                            items[i].planes[j].n, p * trans
+                            new Vector3(p.array), new Vector3(p.array)
                         ));
                     }
                     // console.log(itemPoints[itemPoints.length - 1]);
@@ -227,11 +240,39 @@
                         itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * itemPoints[i][2].z
                     ) continue;// 超出视景体下边缘
                     for (let j = 0; j < items[i].planes.length; j++) {
-                        // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n <= 0) continue;
+                        // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n > 0) continue;
+                        function crop(pre, now) {
+                        }
                         ctx.beginPath();
                         let sx, sy;
+                        let per = new Vector3(items[i].planes[j].points[items[i].planes[j].points.length - 1]);
                         for (let k = 0; k < items[i].planes[j].points.length; k++) {
-                            let point = itemPoints[i][0][items[i].planes[j].points[k]];
+                            let point = new Vector3(itemPoints[i][0][items[i].planes[j].points[k]]);
+                            if (point.z < near_d) {// 超出近裁面
+
+                            }
+                            if (point.z > far_d) {// 超出远裁面
+                            }
+                            if (
+                                point.x > Math.tan(See3D.FOV_x / 2) * point.z// 超出视景体右边缘
+                            ) {
+
+                            }
+                            if (
+                                point.x < -Math.tan(See3D.FOV_x / 2) * point.z// 超出视景体左边缘
+                            ) {
+
+                            }
+                            if (
+                                point.y > Math.tan(See3D.FOV_y / 2) * point.z// 超出视景体上边缘
+                            ) {
+
+                            }
+                            if (
+                                point.y < -Math.tan(See3D.FOV_y / 2) * point.z// 超出视景体下边缘
+                            ) {
+
+                            }
                             let screenPos = new See3D.Vector2(
                                 point.x * d / point.z * 100,
                                 -point.y * d / point.z * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
@@ -243,6 +284,7 @@
                             } else {
                                 ctx.lineTo(screenPos.x, screenPos.y);
                             }
+                            per = new See3D.Vector3(point);
                         }
                         ctx.lineTo(sx, sy);
                         ctx.strokeStyle = items[i].color;
@@ -296,44 +338,46 @@
             "Planes": [
                 {
                     "n": [1, 0, 0],
-                    "p0": [0.5, 0, 0],
+                    "p0": [1, 0, 0],
                     "points": [0, 2, 3, 1]
                 },
                 {
                     "n": [-1, 0, 0],
-                    "p0": [-0.5, 0, 0],
+                    "p0": [-1, 0, 0],
                     "points": [4, 6, 7, 5]
                 },
                 {
                     "n": [0, 1, 0],
-                    "p0": [0, 0.5, 0],
+                    "p0": [0, 1, 0],
                     "points": [4, 6, 2, 0]
                 },
                 {
                     "n": [0, -1, 0],
-                    "p0": [0, -0.5, 0],
+                    "p0": [0, -1, 0],
                     "points": [5, 1, 3, 7]
                 },
                 {
                     "n": [0, 0, 1],
-                    "p0": [0, 0, 0.5],
+                    "p0": [0, 0, 1],
                     "points": [2, 0, 1, 3]
                 },
                 {
                     "n": [0, 0, -1],
-                    "p0": [0, 0, -0.5],
+                    "p0": [0, 0, -1],
                     "points": [4, 6, 7, 5]
                 },
             ]
         }
     };
+    // console.log(ITEM_CONFIG["Cube"]);
 
     class entity extends Item {
-        constructor(type, p, s, color, withItemConfig = true) {
+        constructor(type, p, s, color, name, withItemConfig = true) {
             super(p);
             this.type = type;
             this.planes = [];
             this.points = [];
+            this.name = name;
             this.s = s;
             this.color = color;
             if (withItemConfig) {
@@ -348,15 +392,17 @@
             }
             // console.log(ITEM_CONFIG, this.type);
             for (let i = 0; i < config["Points"].length; i++) {
-                let test = new See3D.Vector3(...config["Points"][i]);
+                let test = new See3D.Vector3(...Array(...config["Points"][i]));
                 test.x *= this.s.x;
                 test.y *= this.s.y;
                 test.z *= this.s.z;
                 this.points.push(test);
             }
+            // console.log(config);
             for (let i = 0; i < config["Planes"].length; i++) {
-                let arrN = config["Planes"][i]["n"];
-                let arrP0 = config["Planes"][i]["p0"];
+                let arrN = Array(...config["Planes"][i]["n"]);
+                let arrP0 = Array(...config["Planes"][i]["p0"]);
+                // console.log(arrN);
                 arrN[0] *= this.s.x;
                 arrN[1] *= this.s.y;
                 arrN[2] *= this.s.z;
@@ -367,8 +413,9 @@
                     new Vector3(...arrN),
                     new Vector3(...arrP0),
                 ));
-                this.planes[this.planes.length - 1].points = config["Planes"][i]["points"];
+                this.planes[this.planes.length - 1].points = Array(...config["Planes"][i]["points"]);
             }
+            // console.log(this);
             return this;
         }
         rotate(r) {
@@ -395,17 +442,18 @@
     }
 
     class Point extends entity {
-        constructor(p = See3D.Vector3.Zero(), size = 10, color = "#fff") {
-            super("Point", p, null, color, false);
+        constructor(p = See3D.Vector3.Zero(), size = 10, color = "#fff", name = "") {
+            super("Point", p, null, color, name, false);
             this.r = size;
         }
     }
     class Cube extends entity {
-        constructor(p = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1), color = "#fff") {
+        constructor(p = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1), color = "#fff", name = "") {
             s.x = (s.x == 0 ? s.x : s.x / 2);
             s.y = (s.y == 0 ? s.y : s.y / 2);
             s.z = (s.z == 0 ? s.z : s.z / 2);
-            super("Cube", p, s, color);
+            super("Cube", p, s, color, name);
+            // console.log(this);
         }
     }
 

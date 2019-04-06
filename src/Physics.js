@@ -16,7 +16,9 @@
             if (item2.type == "Point" || item2.type == "Camera") {
                 let plane = new See3D.Plane3D(item1.planes[i]);
                 plane.p0 = plane.p0 + item1.position;
-                if (See3D.PointPositionWithPlane(item2.position, plane) > 0) return false;
+                if (See3D.PointPositionWithPlane(item2.position, plane) > 0) {
+                    return false;
+                }
             } else {
                 for (let j = 0; j < item2.points.length; j++) {
                     let point = new See3D.Vector3(item2.points[j]);
@@ -24,7 +26,9 @@
                     point = point + item2.position;
                     plane.p0 = plane.p0 + item1.position;
                     // console.log(point, plane);
-                    if (See3D.PointPositionWithPlane(point, plane) > 0) return false;
+                    if (See3D.PointPositionWithPlane(point, plane) > 0) {
+                        return false;
+                    }
                 }
             }
         }
@@ -38,14 +42,24 @@
         let items = [];
         let sceneItems = this.scene.items;
         for (let i = 0; i < sceneItems.length; i++) {
-            if (crash(this, sceneItems[i])) items.push(sceneItems[i]);
+            if (crash(this, sceneItems[i]) && this !== sceneItems[i]) items.push(sceneItems[i]);
         }
+        // console.log(sceneItems);
         return items;
     });
+    See3D.Item.method("noRigidBody", function (name) {
+        if (this.noRigids === undefined) this.noRigids = {};
+        this.noRigids[name] = true;
+    });
     See3D.Item.method("RigidBody", function () {
+        if (this.noRigids === undefined) this.noRigids = {};
         this.pushUpdate(function (self) {
+            // let index = 0;
             let crashItem = self.crashAny()[0];
             if (!crashItem) return;
+            let name = String(crashItem.name);
+            if (self.noRigids[name]) return;
+            // console.log(crashItem);
             let v = (new Vector3(
                 self.position.x - crashItem.position.x,
                 self.position.y - crashItem.position.y,
@@ -60,6 +74,7 @@
             // console.log(self.position.x, self.position.y, self.position.z);
             // console.log(crashItem.position.x, crashItem.position.y, crashItem.position.z);
             // console.log("=============");
+            if (self.type == "Cube") console.log(self, crashItem, v);
             while (self.crash(crashItem)) {
                 self.position = self.position + v;
                 // console.log(self.position);

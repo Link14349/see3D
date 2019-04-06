@@ -90,7 +90,9 @@ var _Op = function () {
             if (_Op.equal(item2.type, "Point") || _Op.equal(item2.type, "Camera")) {
                 var plane = new See3D.Plane3D(item1.planes[i]);
                 plane.p0 = _Op.add(plane.p0, item1.position);
-                if (_Op.greater(See3D.PointPositionWithPlane(item2.position, plane), 0)) return false;
+                if (_Op.greater(See3D.PointPositionWithPlane(item2.position, plane), 0)) {
+                    return false;
+                }
             } else {
                 for (var j = 0; _Op.less(j, item2.points.length); j++) {
                     var point = new See3D.Vector3(item2.points[j]);
@@ -98,7 +100,9 @@ var _Op = function () {
                     point = _Op.add(point, item2.position);
                     _plane.p0 = _Op.add(_plane.p0, item1.position);
                     // console.log(point, plane);
-                    if (_Op.greater(See3D.PointPositionWithPlane(point, _plane), 0)) return false;
+                    if (_Op.greater(See3D.PointPositionWithPlane(point, _plane), 0)) {
+                        return false;
+                    }
                 }
             }
         }
@@ -112,14 +116,24 @@ var _Op = function () {
         var items = [];
         var sceneItems = this.scene.items;
         for (var i = 0; _Op.less(i, sceneItems.length); i++) {
-            if (crash(this, sceneItems[i])) items.push(sceneItems[i]);
+            if (crash(this, sceneItems[i]) && this !== sceneItems[i]) items.push(sceneItems[i]);
         }
+        // console.log(sceneItems);
         return items;
     });
+    See3D.Item.method("noRigidBody", function (name) {
+        if (this.noRigids === undefined) this.noRigids = {};
+        this.noRigids[name] = true;
+    });
     See3D.Item.method("RigidBody", function () {
+        if (this.noRigids === undefined) this.noRigids = {};
         this.pushUpdate(function (self) {
+            // let index = 0;
             var crashItem = self.crashAny()[0];
             if (!crashItem) return;
+            var name = String(crashItem.name);
+            if (self.noRigids[name]) return;
+            // console.log(crashItem);
             var v = new Vector3(_Op.sub(self.position.x, crashItem.position.x), _Op.sub(self.position.y, crashItem.position.y), _Op.sub(self.position.z, crashItem.position.z)).norm();
             if (isNaN(v.x) || isNaN(v.y) || isNaN(v.z)) {
                 v.x = 1;
@@ -130,6 +144,7 @@ var _Op = function () {
             // console.log(self.position.x, self.position.y, self.position.z);
             // console.log(crashItem.position.x, crashItem.position.y, crashItem.position.z);
             // console.log("=============");
+            if (_Op.equal(self.type, "Cube")) console.log(self, crashItem, v);
             while (self.crash(crashItem)) {
                 self.position = _Op.add(self.position, v);
                 // console.log(self.position);

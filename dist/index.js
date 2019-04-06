@@ -114,6 +114,7 @@ var See3D = function () {
         this.__scenes = {};
         this.use = null;
         this.__fps = 0;
+        this.end = true;
         // this.__time = 0;
         this.__BGC = See3D.defaultBGC;
         for (var i in dom) {
@@ -182,8 +183,14 @@ var See3D = function () {
             return this;
         }
     }, {
+        key: "endLoop",
+        value: function endLoop() {
+            this.end = true;
+        }
+    }, {
         key: "renderLoop",
         value: function renderLoop(PhyFun, ViewFun) {
+            this.end = false;
             var self = this;
             var time = 0;
             var count = 0;
@@ -206,7 +213,7 @@ var See3D = function () {
                 self.ctx.clearRect(0, 0, width, height);
                 self.render();
                 if (ViewFun) ViewFun(self); // 视角
-                requestAnimationFrame(cb);
+                if (!self.end) requestAnimationFrame(cb);
             });
         }
     }, {

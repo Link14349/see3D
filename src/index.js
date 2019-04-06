@@ -31,6 +31,7 @@ class See3D {
         this.__scenes = {};
         this.use = null;
         this.__fps = 0;
+        this.end = true;
         // this.__time = 0;
         this.__BGC = See3D.defaultBGC;
         for (let i in dom) {
@@ -89,7 +90,11 @@ class See3D {
         }
         return this;
     }
+    endLoop() {
+        this.end = true;
+    }
     renderLoop(PhyFun, ViewFun) {
+        this.end = false;
         let self = this;
         let time = 0;
         let count = 0;
@@ -109,7 +114,8 @@ class See3D {
             self.ctx.clearRect(0, 0, width, height);
             self.render();
             if (ViewFun) ViewFun(self);// 视角
-            requestAnimationFrame(cb);
+            if (!self.end)
+                requestAnimationFrame(cb);
         });
     }
     get fps() {

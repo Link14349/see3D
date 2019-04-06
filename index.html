@@ -48,20 +48,23 @@
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
     let camera = new See3D.Camera(new See3D.Vector3(0, 10, -100), "camera", scene);
-    let cube = new See3D.Cube(new See3D.Vector3(0, 10, -110), new See3D.Vector3(5, 5, 5), "#0ff");
-    let tower = new See3D.Cube(new See3D.Vector3(0, 50, 0), new See3D.Vector3(100, 100, 100), "#f0f");
-    let signs = [];
-    for (let i = 0; i < 200; i++) {
-        let c = new See3D.Cube(new See3D.Vector3(See3D.randint(-500, 500), 0, See3D.randint(-500, 500)), new See3D.Vector3(See3D.rand(0.1, 5), See3D.rand(0.1, 2), See3D.rand(0.1, 5)), "#ff0");
-        scene.push(c);
-        signs.push(c);
-    }
+    // let me = new See3D.Cube(new See3D.Vector3(0, 10, -100), new See3D.Vector3(5, 5, 5), "#0ff", "me");
+    let cube = new See3D.Cube(new See3D.Vector3(See3D.randint(-300, 300), See3D.randint(-300, 300), See3D.randint(-300, 300)), new See3D.Vector3(30, 30, 30), "#f00", "cube");
+    let tower = new See3D.Cube(new See3D.Vector3(0, 0, 0), new See3D.Vector3(100, 100, 100), "#f0f");
+    let stars = [];
     scene
         .push(camera)
         .camera("camera")
         .push(cube)
         .push(tower)
     ;
+    let colors = ["#ff0", "#af0", "#00FF00", "#FFD700", "#FFA500", "#FF4500", "#32CD32"];
+    for (let i = 0; i < 10; i++) {
+        let c = new See3D.Cube(new See3D.Vector3(See3D.randint(-300, 300), See3D.randint(-300, 300), See3D.randint(-300, 300)), new See3D.Vector3(20, 20, 20), colors[See3D.randint(0, colors.length)], "star");
+        c.rotate(new Vector3(Math.PI / 180 * See3D.randint(1, 2), Math.PI / 180 * See3D.randint(1, 2), Math.PI / 180 * See3D.randint(1, 2)));
+        scene.push(c);
+        stars.push(c);
+    }
     game
         .push(scene)
         .scene("scene")
@@ -71,49 +74,101 @@
     document.onkeydown = function (e) {
         // console.log(e.keyCode);
         keyCode = e.keyCode;
+        // console.log(keyCode);
     };
     document.onkeyup = function (e) {
         keyCode = -1;
     };
     camera.RigidBody();
-    // cube.RigidBody();
+    camera.noRigidBody("cube");
+    // camera.noRigidBody("star");
+    camera.noRigidBody("me");
     // game.render();
+    let blood = 100;
+    let win = false;
+    let lost = false;
+    let speed = 10;
+    let crash = false;
+    let count = 0;
+    let wait = false;
+    // console.log(camera.crashAny());
     game.renderLoop(
         function PhyUpdate(self) {
+            crash = false;
+            if (wait) {
+                count++;
+                if (count >= 10) {
+                    wait = false;
+                    count = 0;
+                }
+            }
+            // speed = 10 / game.fps;
             if (keyCode == 38) {// up
-                camera.forward(1);
+                camera.forward(speed);
             }
             if (keyCode == 40) {// down
-                camera.back(1);
+                camera.back(speed);
             }
             if (keyCode == 37) {// left
-                camera.left(1);
+                camera.left(speed);
             }
             if (keyCode == 39) {// right
-                camera.right(1);
+                camera.right(speed);
             }
             if (keyCode == 65) {// a
-                camera.rotate(new Vector3(0, -Math.PI / 180, 0));
+                camera.rotate(new Vector3(0, Math.PI / 180, 0));
+                // camera.rotate(new Vector3(0, Math.PI / 180, 0));
                 // camera.revolution(new Vector3(0, -Math.PI / 180, 0));
             }
             if (keyCode == 68) {// d
-                camera.rotate(new Vector3(0, Math.PI / 180, 0));
+                camera.rotate(new Vector3(0, -Math.PI / 180, 0));
+                // camera.rotate(new Vector3(0, -Math.PI / 180, 0));
                 // camera.revolution(new Vector3(0, Math.PI / 180, 0));
             }
             if (keyCode == 87) {// w
-                camera.rotate(new Vector3(-Math.PI / 180, 0, 0));
+                camera.rotate(new Vector3(Math.PI / 180, 0, 0));
+                // camera.rotate(new Vector3(-Math.PI / 180, 0, 0));
                 // camera.revolution(new Vector3(-Math.PI / 180, 0, 0));
             }
             if (keyCode == 83) {// s
-                camera.rotate(new Vector3(Math.PI / 180, 0, 0));
+                camera.rotate(new Vector3(-Math.PI / 180, 0, 0));
+                // camera.rotate(new Vector3(Math.PI / 180, 0, 0));
                 // camera.revolution(new Vector3(Math.PI / 180, 0, 0));
             }
-            // cube.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
+            if (keyCode == 73) {
+                speed++;
+            }
+            if (keyCode == 75) {
+                speed--;
+            }
+            if (!wait) {
+                for (let i = 0; i < stars.length; i++) {
+                    if (camera.crash(stars[i])) {
+                        crash = true;
+                        wait = true;
+                        blood--;
+                        if (blood <= 0) {
+                            lost = true;
+                            game.endLoop();
+                        }
+                    }
+                    stars[i].forward(See3D.randint(5, 10));
+                }
+            }
+            if (camera.crash(cube)) {
+                win = true;
+                game.endLoop();
+            }
+            // camera.position = new Vector3(me.position);
+            // camera.rotation = new Vector3(me.rotation);
+            // me.rotation = new Vector3(camera.rotation);
+            // me.forward(10);
+            // cube.rotate(new Vector3(Math.PI / 60, Math.PI / 60, Math.PI / 60));
             // camera.rotate(new Vector3(Math.PI / 180, Math.PI / 180, Math.PI / 180));
             // let tmp = tower.position.operatorSub(camera.position);
             // tower.rotate(new Vector3(0, Math.PI / 180 * tmp.mod() / 180, 0));
-            // for (let i = 0; i < signs.length; i++) {
-            //     signs[i].rotate(new Vector3(Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1)));
+            // for (let i = 0; i < stars.length; i++) {
+            //     stars[i].rotate(new Vector3(Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1), Math.PI / 180 * See3D.rand(-1, 1)));
             // }
         },
         function ViewUpdate(self) {
@@ -127,6 +182,25 @@
             ctx.fillText("Camera Status", self.width(), 20);
             ctx.fillText("Position (" + camera.position.x.toFixed(2) + ", " + camera.position.y.toFixed(2) + ", " + camera.position.z.toFixed(2) + ")", self.width(), 40);
             ctx.fillText("Rotation (" + (camera.rotation.x / Math.PI * 180).toFixed(2) + ", " + (camera.rotation.y / Math.PI * 180).toFixed(2) + ", " + (camera.rotation.z / Math.PI * 180).toFixed(2) + ")", self.width(), 60);
+
+            ctx.textAlign = "left";
+            ctx.fillText("Blood: " + blood, 0, 0);
+            ctx.fillText("Speed: " + speed, 0, 20);
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = "50px Verdana";
+            if (win) {
+                ctx.fillText("You win!", self.width() / 2, self.height() / 2);
+            }
+            if (lost) {
+                ctx.fillText("You lost!", self.width() / 2, self.height() / 2);
+            }
+            if (crash || wait) {
+                ctx.textBaseline = "top";
+                ctx.fillStyle = "#f00";
+                ctx.fillText("You crashed the star", self.width() / 2, 0);
+            }
             ctx.closePath();
         }
     );
