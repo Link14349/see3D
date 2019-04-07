@@ -1,6 +1,8 @@
 "use strict";
 'bpo enable';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; _Op.less(i, props.length); i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); _Op.less(i, arr.length); i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -282,6 +284,7 @@ var _Op = function () {
             _this3.scene = scene;
             _this3.__name = name;
             _this3.d = 0;
+            _this3.__projType = Camera.PRESPECTIVE_PROJECTION;
             return _this3;
         }
 
@@ -314,6 +317,7 @@ var _Op = function () {
                     if (_Op.less(ar, br)) return -1;
                     return 0;
                 });
+                var projType = this.projType;
                 // console.log(d);
                 // console.log("update");
                 for (var i = 0; _Op.less(i, items.length); i++) {
@@ -354,7 +358,16 @@ var _Op = function () {
                         if (_Op.greater(itemPoints[_i].y, _Op.mul(Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i].z))) continue; // 超出视景体上边缘
                         if (_Op.less(itemPoints[_i].y, _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), itemPoints[_i].z))) continue; // 超出视景体下边缘
                         // console.log("a");
-                        var screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
+                        var screenPos = void 0;
+                        if (_Op.equal(projType, Camera.PRESPECTIVE_PROJECTION)) {
+                            screenPos = new See3D.Vector2( // 透视投影
+                            _Op.mul(_Op.div(_Op.mul(itemPoints[_i].get(0), d), itemPoints[_i].get(2)), 100), _Op.mul(_Op.div(_Op.mul(-itemPoints[_i].get(1), d), itemPoints[_i].get(2)), 100));
+                        } else if (_Op.equal(projType, Camera.ORTHOGONAL_PROJECTION)) {
+                            screenPos = new See3D.Vector2(_Op.mul(itemPoints[_i].get(0), 100), _Op.mul(-itemPoints[_i].get(1), 100));
+                        } else {
+                            console.log(_Op.add(_Op.add("Error 201: Illegal camera projection type value: '", n), "'"));
+                            return;
+                        }
                         ctx.beginPath();
                         ctx.arc(screenPos.x, screenPos.y, item.r, 0, _Op.mul(Math.PI, 2));
                         ctx.fillStyle = items[_i].color;
@@ -377,6 +390,7 @@ var _Op = function () {
                             var sx = void 0,
                                 sy = void 0;
                             var per = new Vector3(items[_i].planes[_j2].points[_Op.sub(items[_i].planes[_j2].points.length, 1)]);
+                            // console.log("========");
                             for (var k = 0; _Op.less(k, items[_i].planes[_j2].points.length); k++) {
                                 var point = new Vector3(itemPoints[_i][0][items[_i].planes[_j2].points[k]]);
                                 if (_Op.less(point.z, near_d)) {// 超出近裁面
@@ -392,7 +406,17 @@ var _Op = function () {
                                 ) {}
                                 if (_Op.less(point.y, _Op.mul(-Math.tan(_Op.div(See3D.FOV_y, 2)), point.z)) // 超出视景体下边缘
                                 ) {}
-                                var _screenPos = new See3D.Vector2(_Op.mul(_Op.div(_Op.mul(point.x, d), point.z), 100), _Op.mul(_Op.div(_Op.mul(-point.y, d), point.z), 100));
+                                var _screenPos = void 0;
+                                if (_Op.equal(projType, Camera.PRESPECTIVE_PROJECTION)) {
+                                    _screenPos = new See3D.Vector2( // 透视投影
+                                    _Op.mul(_Op.div(_Op.mul(point.get(0), d), point.get(2)), 100), _Op.mul(_Op.div(_Op.mul(-point.get(1), d), point.get(2)), 100));
+                                } else if (_Op.equal(projType, Camera.ORTHOGONAL_PROJECTION)) {
+                                    _screenPos = new See3D.Vector2(_Op.mul(point.get(0), 100), _Op.mul(-point.get(1), 100));
+                                    // console.log(screenPos);
+                                } else {
+                                    console.log(_Op.add(_Op.add("Error 201: Illegal camera projection type value: '", n), "'"));
+                                    return;
+                                }
                                 if (_Op.equal(k, 0)) {
                                     ctx.moveTo(_screenPos.x, _screenPos.y);
                                     sx = _screenPos.x;
@@ -426,6 +450,19 @@ var _Op = function () {
                 return this;
             }
         }, {
+            key: "projType",
+            get: function get() {
+                return this.__projType;
+            },
+            set: function set(n) {
+                if (_Op.notEqual(typeof n === "undefined" ? "undefined" : _typeof(n), "number")) {
+                    console.log(_Op.add(_Op.add("Error 201: Illegal camera projection type value: '", n), "'"));
+                    return null;
+                }
+                this.__projType = n;
+                return n;
+            }
+        }, {
             key: "name",
             get: function get() {
                 return this.__name;
@@ -447,6 +484,9 @@ var _Op = function () {
 
         return Camera;
     }(Item);
+
+    Camera.PRESPECTIVE_PROJECTION = 0;
+    Camera.ORTHOGONAL_PROJECTION = 1;
 
     var ITEM_CONFIG = {
         "Cube": {

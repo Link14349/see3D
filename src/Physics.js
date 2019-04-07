@@ -12,6 +12,7 @@
             if (item2.type == "Point" || item2.type == "Camera") return (item1.position.x == item2.position.x && item1.position.y == item2.position.y && item1.position.z == item2.position.z);
             return false;
         }
+        // console.log(item2);
         for (let i = 0; i < item1.planes.length; i++) {
             if (item2.type == "Point" || item2.type == "Camera") {
                 let plane = new See3D.Plane3D(item1.planes[i]);

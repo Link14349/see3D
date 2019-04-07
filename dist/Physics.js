@@ -86,6 +86,7 @@ var _Op = function () {
             if (_Op.equal(item2.type, "Point") || _Op.equal(item2.type, "Camera")) return _Op.equal(item1.position.x, item2.position.x) && _Op.equal(item1.position.y, item2.position.y) && _Op.equal(item1.position.z, item2.position.z);
             return false;
         }
+        // console.log(item2);
         for (var i = 0; _Op.less(i, item1.planes.length); i++) {
             if (_Op.equal(item2.type, "Point") || _Op.equal(item2.type, "Camera")) {
                 var plane = new See3D.Plane3D(item1.planes[i]);

@@ -133,6 +133,18 @@
             this.scene = scene;
             this.__name = name;
             this.d = 0;
+            this.__projType = Camera.PRESPECTIVE_PROJECTION;
+        }
+        get projType() {
+            return this.__projType;
+        }
+        set projType(n) {
+            if (typeof n != "number") {
+                console.log("Error 201: Illegal camera projection type value: '" + n + "'");
+                return null;
+            }
+            this.__projType = n;
+            return n;
         }
         render() {
             // console.log("a");
@@ -161,6 +173,7 @@
                 if (ar < br) return -1;
                 return 0;
             });
+            let projType = this.projType;
             // console.log(d);
             // console.log("update");
             for (let i = 0; i < items.length; i++) {
@@ -213,10 +226,21 @@
                         itemPoints[i].y < -Math.tan(See3D.FOV_y / 2) * itemPoints[i].z
                     ) continue;// 超出视景体下边缘
                     // console.log("a");
-                    let screenPos = new See3D.Vector2(
-                        itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
-                        -itemPoints[i].get(1) * d / itemPoints[i].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                    );
+                    let screenPos;
+                    if (projType == Camera.PRESPECTIVE_PROJECTION) {
+                        screenPos = new See3D.Vector2(// 透视投影
+                            itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
+                            -itemPoints[i].get(1) * d / itemPoints[i].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
+                        );
+                    } else if (projType == Camera.ORTHOGONAL_PROJECTION) {
+                        screenPos = new See3D.Vector2(
+                            itemPoints[i].get(0) * 100,
+                            -itemPoints[i].get(1) * 100,
+                        );
+                    } else {
+                        console.log("Error 201: Illegal camera projection type value: '" + n + "'");
+                        return;
+                    }
                     ctx.beginPath();
                     ctx.arc(screenPos.x, screenPos.y, item.r, 0, Math.PI * 2);
                     ctx.fillStyle = items[i].color;
@@ -246,6 +270,7 @@
                         ctx.beginPath();
                         let sx, sy;
                         let per = new Vector3(items[i].planes[j].points[items[i].planes[j].points.length - 1]);
+                        // console.log("========");
                         for (let k = 0; k < items[i].planes[j].points.length; k++) {
                             let point = new Vector3(itemPoints[i][0][items[i].planes[j].points[k]]);
                             if (point.z < near_d) {// 超出近裁面
@@ -273,10 +298,22 @@
                             ) {
 
                             }
-                            let screenPos = new See3D.Vector2(
-                                point.x * d / point.z * 100,
-                                -point.y * d / point.z * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                            );
+                            let screenPos;
+                            if (projType == Camera.PRESPECTIVE_PROJECTION) {
+                                screenPos = new See3D.Vector2(// 透视投影
+                                    point.get(0) * d / point.get(2) * 100,
+                                    -point.get(1) * d / point.get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
+                                );
+                            } else if (projType == Camera.ORTHOGONAL_PROJECTION) {
+                                screenPos = new See3D.Vector2(
+                                    point.get(0) * 100,
+                                    -point.get(1) * 100,
+                                );
+                                // console.log(screenPos);
+                            } else {
+                                console.log("Error 201: Illegal camera projection type value: '" + n + "'");
+                                return;
+                            }
                             if (k == 0) {
                                 ctx.moveTo(screenPos.x, screenPos.y);
                                 sx = screenPos.x;
@@ -322,6 +359,8 @@
             return this.__name;
         }
     }
+    Camera.PRESPECTIVE_PROJECTION = 0;
+    Camera.ORTHOGONAL_PROJECTION = 1;
 
     let ITEM_CONFIG = {
         "Cube": {
