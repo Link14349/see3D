@@ -598,6 +598,11 @@ var _Op = function () {
                 }
                 return this;
             }
+        }, {
+            key: "translate",
+            value: function translate(s) {
+                var t = s.inverse();
+            }
         }]);
 
         return entity;

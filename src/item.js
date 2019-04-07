@@ -478,6 +478,9 @@
             }
             return this;
         }
+        translate(s) {
+            let t = s.inverse();
+        }
     }
 
     class Point extends entity {
