@@ -50,15 +50,27 @@
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.Scene("scene", game);
     let camera = new See3D.Camera(new See3D.Vector3(0, 0, 0), "camera", scene);
+    let cube = new See3D.Cube(new See3D.Vector3(0, 0, 2), new Vector3(1, 1, 1), "#fff", "cube");
     scene
         .push(camera)
         .camera("camera")
+        .push(cube)
     ;
     game
         .push(scene)
         .scene("scene")
     ;
     game.full();
+    let s = 0;
+    let big = true;
+    game.renderLoop(function () {
+        if (big) s++;
+        else s--;
+        if (s <= 0) big = true;
+        if (s >= 100) big = false;
+        if (big) cube.scale(new Vector3(1.01, 1, 1));
+        else cube.scale(new Vector3(1 / 1.01, 1, 1));
+    });
 </script>
 </body>
 </html>

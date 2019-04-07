@@ -590,18 +590,30 @@ var _Op = function () {
                     this.points[i] = new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(this.points[i].array))))();
                 }
                 for (var _i3 = 0; _Op.less(_i3, this.planes.length); _i3++) {
-                    this.planes[_i3].n.push(1);
-                    this.planes[_i3].n = _Op.mul(this.planes[_i3].n, rotation);
-                    this.planes[_i3].n.array.pop();
-                    this.planes[_i3].n = new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(this.planes[_i3].n.array))))();
-                    this.planes[_i3].p0 = new Vector3(this.planes[_i3].n);
+                    this.planes[_i3].p0.push(1);
+                    this.planes[_i3].p0 = _Op.mul(this.planes[_i3].p0, rotation);
+                    this.planes[_i3].p0.array.pop();
+                    this.planes[_i3].p0 = new (Function.prototype.bind.apply(Vector3, [null].concat(_toConsumableArray(this.planes[_i3].p0.array))))();
+                    this.planes[_i3].n = new Vector3(this.planes[_i3].p0);
                 }
                 return this;
             }
         }, {
             key: "translate",
             value: function translate(s) {
-                var t = s.inverse();
+                var t = new Vector3(-s.x, -s.y, -s.z);
+                for (var i = 0; _Op.less(i, this.points.length); i++) {
+                    this.points[i] = _Op.add(this.points[i], t);
+                }
+            }
+        }, {
+            key: "scale",
+            value: function scale(s) {
+                for (var i = 0; _Op.less(i, this.points.length); i++) {
+                    this.points[i].x *= s.x;
+                    this.points[i].y *= s.y;
+                    this.points[i].z *= s.z;
+                }
             }
         }]);
 

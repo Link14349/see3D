@@ -470,16 +470,26 @@
                 this.points[i] = new Vector3(...this.points[i].array);
             }
             for (let i = 0; i < this.planes.length; i++) {
-                this.planes[i].n.push(1);
-                this.planes[i].n = this.planes[i].n * rotation;
-                this.planes[i].n.array.pop();
-                this.planes[i].n = new Vector3(...this.planes[i].n.array);
-                this.planes[i].p0 = new Vector3(this.planes[i].n);
+                this.planes[i].p0.push(1);
+                this.planes[i].p0 = this.planes[i].p0 * rotation;
+                this.planes[i].p0.array.pop();
+                this.planes[i].p0 = new Vector3(...this.planes[i].p0.array);
+                this.planes[i].n = new Vector3(this.planes[i].p0);
             }
             return this;
         }
         translate(s) {
-            let t = s.inverse();
+            let t = new Vector3(-s.x, -s.y, -s.z);
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i] = this.points[i] + t;
+            }
+        }
+        scale(s) {
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i].x *= s.x;
+                this.points[i].y *= s.y;
+                this.points[i].z *= s.z;
+            }
         }
     }
 
