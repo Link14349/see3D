@@ -44,18 +44,21 @@
     scene.push(platform);
     scene.push(pyramid);
     scene.push(prism);
-    // scene.push(point);
+    scene.push(point);
     window.onresize = () => {
         game.width(window.innerWidth).height(window.innerHeight);
     };
     // game.render();
     let scaler = 1.01;
     game.showFPS = true;
+    pyramid.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
+    platform.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
+    prism.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
     // game.clear = false;
     game.whileRender(function () {
         if (point.position.x > 10 || point.position.x < -10) { add = -add; upper *= -1; }
-        // point.position.x += add * 0.1;
-        // point.position.y = upper * Math.sqrt(100 - point.position.x ** 2);
+        point.position.x += add * 0.1;
+        point.position.y = upper * Math.sqrt(100 - point.position.x ** 2);
         platform.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
         pyramid.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
         prism.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));

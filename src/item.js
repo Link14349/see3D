@@ -61,6 +61,12 @@
             }
             this.maxRadius = Math.sqrt(max);
         }
+        moveOrigin(s) {
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i].subTo(s);
+            }
+            return this;
+        }
         forward(step) {
             let p = (new See3D.Math3D.Point3D(0, 0, step)).rotate(this.rotation.inverse());
             this.position.x -= p.x;
@@ -75,11 +81,21 @@
             this.position.z += p.z;
             return this;
         }
+        up(step) {
+            let p = (new See3D.Math3D.Point3D(0, step, 0)).rotate(this.rotation.inverse());
+            this.position.x -= p.x;
+            this.position.y -= p.y;
+            this.position.z += p.z;
+            return this;
+        }
         right(step) {
             return this.left(-step);
         }
         back(step) {
             return this.forward(-step);
+        }
+        down(step) {
+            return this.up(-step);
         }
     }
     class Camera extends Item {
