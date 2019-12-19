@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Design</title>
+    <script type="text/javascript" src="src/index.js"></script>
+    <script type="text/javascript" src="src/math.js"></script>
+    <script type="text/javascript" src="src/item.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            /*background-color: #333;*/
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<button id="cp">create plane</button>
+<input id="x" type="number"/>
+<input id="y" type="number"/>
+<input id="z" type="number"/>
+<script type="text/javascript">
+    let game = new See3D(document.getElementById("canvas"));
+    let scene = new See3D.View.Scene();
+    let camera = new See3D.View.Camera(new Point3D(0, 0, -100));
+    let line = new See3D.View.Line(new Point3D(0, 0, 10), new Point3D(-10, -10, -10), new Point3D(10, 10, 10));
+    let planePoints = [];
+    game.scene(scene);
+    scene.push(line);
+    scene.camera(camera);
+    window.onresize = () => {
+        game.width(window.innerWidth).height(window.innerHeight);
+    };
+    game.width(window.innerWidth).height(window.innerHeight);
+    game.whileRender();
+    let opt = {
+        audio: true,
+        video: {
+            width: window.innerWidth,
+            height: window.innerHeight
+        }
+    };
+</script>
+</body>
+</html>

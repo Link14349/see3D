@@ -24,25 +24,25 @@ class See3D {
     constructor(dom = document.createElement("canvas")) {
         this.__dom = dom;
         this.__ctx = dom.getContext("2d");
-        this.loadGlobal();
-        this.bindLibrary("IO");
-        this.bindLibrary("Math3D");
-        this.sout = new See3D.IO.sostream(this);
-        this.__scenes = {};
         this.use = null;
         this.__fps = 0;
         this.end = true;
+        this.alpha = See3D.FOV_x;
+        this.beta = See3D.FOV_y;
+        // this.alpha = this.beta = Math.max(this.alpha * this.height() / this.width(), this.alpha);
         // this.__time = 0;
         this.__BGC = See3D.defaultBGC;
-        for (let i in dom) {
-            if (!this[i]) this[i] = dom[i];
-        }
+        this.showFPS = false;
+        this.clear = true;
     }
+    get ctx() { return this.__ctx; }
+    get dom() { return this.__dom; }
     width(w) {
         if (w === void(0)) {
             return this.__dom.width;
         }
         this.__dom.width = w;
+        // this.alpha = this.beta = Math.max(this.alpha * this.height() / this.width(), this.alpha);
         return this;
     }
     height(w) {
@@ -50,6 +50,7 @@ class See3D {
             return this.__dom.height;
         }
         this.__dom.height = w;
+        // this.alpha = this.beta = Math.max(this.alpha * this.height() / this.width(), this.alpha);
         return this;
     }
     full() {
@@ -65,20 +66,19 @@ class See3D {
             .height(window.innerHeight)
         ;
     }
-    push(s) {
-        this.__scenes[s.name] = s;
-        if (!this.use) this.use = s;
-        return this;
-    }
-    scene(n) {
-        this.use = this.__scenes[n];
+    scene(s) {
+        this.use = s;
+        s.game = this;
         return this;
     }
     render() {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = this.__BGC;
-        this.ctx.fillRect(0, 0, this.dom.width, this.dom.height);
-        this.ctx.closePath();
+        if (this.clear) {
+            // console.log("clear");
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.__BGC;
+            this.ctx.fillRect(0, 0, this.dom.width, this.dom.height);
+            this.ctx.closePath();
+        }
         this.ctx.save();
         this.ctx.translate(this.dom.width / 2, this.dom.height / 2);
         if (this.use) {
@@ -90,36 +90,28 @@ class See3D {
         }
         return this;
     }
-    endLoop() {
-        this.end = true;
-    }
-    renderLoop(PhyFun, ViewFun) {
-        this.end = false;
-        let self = this;
-        let time = 0;
-        let count = 0;
-        self.__fps = 0;
-        setInterval(function () {
-            time = 1;
-        }, 1000);
-        requestAnimationFrame(function cb() {
-            count++;
-            if (time) {
-                self.__fps = count;
-                count = 0;
-                time = 0;
+    whileRender(up1, up2) {
+        let preFPS = 60;
+        this.__fps = 60;
+        let startTS = (new Date()).getTime(), endTS;
+        let updatePreFPS = startTS;
+        window.requestAnimationFrame(function cb() {
+            if (up1) up1();
+            this.render();
+            if (up2) up2();
+            endTS = (new Date()).getTime();
+            this.__fps = parseInt(1000 / (endTS - startTS));
+            if (endTS - updatePreFPS >= 100) {
+                preFPS = this.fps;
+                updatePreFPS = endTS;
             }
-            if (PhyFun) PhyFun(self);// 物理
-            let {width, height} = self.dom;
-            self.ctx.clearRect(0, 0, width, height);
-            self.render();
-            if (ViewFun) ViewFun(self);// 视角
-            if (!self.end)
-                requestAnimationFrame(cb);
-        });
-    }
-    get fps() {
-        return this.__fps;
+            this.ctx.fillStyle = "#fff";
+            this.ctx.font = "20px monospace";
+            this.ctx.textBaseline = "top";
+            this.ctx.fillText("FPS: " + preFPS, this.dom.width - 100, 0);
+            startTS = endTS;
+            window.requestAnimationFrame(cb.bind(this));
+        }.bind(this));
     }
     noView() {
         let ctx = this.ctx;
@@ -134,84 +126,37 @@ class See3D {
         ctx.closePath();
         return this;
     }
-    /**
-     * @function loadGlobal
-     * @desc 将所有全局库加载入该See3D实例
-     */
-    loadGlobal() {
-        for (let i of See3D.__loads) {
-            this.load(i);
-        }
-        return this;
-    }
-    bindLibrary(name) {// 将该库的所有API加入该See3D实例
-        let lib = this[name];
-        for (let i in lib.defines) {
-            this[i] = lib.defines[i];
+    static sendAjax(href, cb) {
+        let xml = null;
+        if (window.XMLHttpRequest) xml = new XMLHttpRequest();
+        else xml = new ActiveXObject('Microsoft.XMLHTTP');
+        xml.open("get", href, true);
+        xml.send();
+        xml.onreadystatechange = function() {
+            if (xml.readyState == 4 && xml.status == 200) {
+                cb(xml.responseText);
+            }
         }
     }
-    /**
-     * @function load
-     * @param {string} name
-     * @desc 加载指定库到See3D对象中
-     */
-    load(name) {
-        this[name] = See3D.__libraries.get(name);
-        return this;
+    static loadModel(type, source) {
+        this.sendAjax(source, (content) => {
+            let lines = content.split("\n");
+            let modelInfoLine = lines[0];
+            let modelInfoLineSplits = modelInfoLine.split(" ");
+            let name = modelInfoLineSplits[0], vertexCount = Number(modelInfoLineSplits[1]), planeCount = Number(modelInfoLineSplits[2]);
+            let points = [];
+            let planes = [];
+            lines.forEach(((value, index, array) => {
+            }));
+        });
     }
-    get dom() {
-        return this.__dom;
-    }
-    get ctx() {
-        return this.__ctx;
-    }
-    /**
-     * @function library
-     * @param {See3D.Library} entry
-     * @desc 添加See3D库
-     */
-    static library(entry) {
-        // entry
-        console.log("%cSee3D library %s loaded.", "color:#FF1493", entry.name);
-        See3D.__libraries.set(entry.name, entry);
-    }
-    /**
-     * @function load
-     * @param {String} name
-     * @desc 添加应默认自带的库
-     */
-    static load(name) {
-        console.log("%cSee3D library %s added to See3D global.", "color:#C71585", name);
-        See3D.__loads.push(name);
-    }
-    /**
-     * @function loadGlobal
-     * @param {String} name
-     * @desc 将该库导入到全局环境
-     */
-    static loadGlobal(name) {
-        globalThis[name] = See3D.__libraries.get(name);
-    }
-    static lib(name) {
-        See3D[name] = See3D.__libraries.get(name);
-        return See3D.__libraries.get(name);
-    }
+    get fps() { return this.__fps; }
 }
 
 !function (See3D) {
     See3D.version = "v0.0.1";
     console.log("See3D engine (%s) launched", See3D.version);
     See3D.DEBUG = true;
-    /**
-     * @property
-     * @private
-     */
-    See3D.__libraries = new Map();
-    /**
-     * @property
-     * @private
-     */
-    See3D.__loads = [];
 
     /**
      * @class Library
@@ -221,56 +166,21 @@ class See3D {
     class Library {
         constructor(name) {
             this.name = name;
-            this.defines = {};
         }
         define(name, val) {
-            this.defines[name] = val;
+            this[name] = val;
             return this;
         }
-        get(name) {
-            if (this.defines[name].private) {
-                console.error(new Error("Error 99: It's a private value"));
-            }
-            return this.defines[name];
-        }
-        trans() {
-            for (let i in this.defines) {
-                this[i] = this.defines[i];
-            }
-        }
         toSee3D() {
-            for (let i in this.defines) {
-                See3D[i] = this.defines[i];
-            }
+            See3D[this.name] = this;
         }
         global() {
-            for (let i in this.defines) {
-                globalThis[i] = this.defines[i];
+            for (let i in this) {
+                globalThis[i] = this[i];
             }
         }
     }
-    // 所有的See3D库类接口都必须继承自该类
-    class LibraryDefineObject {
-        constructor(type) {
-            this.type = type;
-        }
-        transType() {
-            return null;
-        }
-        static method(n, v) {
-            this.prototype[n] = v;
-        }
-    }
-    function checkType(obj, type) {
-        return obj.type == type;
-    }
-    function translate(type, obj) {
-        return obj.transType(type);
-    }
     See3D.Library = Library;
-    See3D.LibraryDefineObject = LibraryDefineObject;
-    See3D.checkType = checkType;
-    See3D.translate = translate;
 
     // 设置See3D视野角度
     See3D.FOV_x = Math.PI / 180 * 120;

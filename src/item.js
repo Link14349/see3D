@@ -1,532 +1,308 @@
-'bpo enable';
-
 !function (See3D) {
     let lib = new See3D.Library("View");
 
-    class Item extends See3D.LibraryDefineObject {
-        constructor(p = See3D.Vector3.Zero()) {
-            super("Item");
-            this.position = p;
-            this.rotation = See3D.Vector3.Zero();
-            this.scene = null;
-            this.updateFunList = Item.updateFunList.slice(0);
-            this.index = -1;
-            // console.log(r);
-            // this.rotate(r);
+    class Scene {
+        constructor() {
+            this.use = null;
+            this.game = null;
+            this.items = [ ];
         }
-        static pushUpdate(fun) {
-            this.updateFunList.push(fun);
+        camera(camera) {
+            this.use = camera;
+            camera.scene = this;
             return this;
         }
-        pushUpdate(fun) {
-            this.updateFunList.push(fun);
+        render() {
+            if (this.use) this.use.render();
             return this;
         }
-        update() {
-            for (let i = 0; i < this.updateFunList.length; i++) {
-                this.updateFunList[i](this);
+        push(itm) {
+            this.items.push(itm);
+            return this;
+        }
+        get ctx() { return this.game.ctx; }
+        get alpha() { return this.game.alpha; }
+        get beta() { return this.game.beta; }
+        get width() { return this.game.width(); }
+        get height() { return this.game.height(); }
+    }
+    class Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
+            this.position = position;
+            this.rotation = rotation;
+            this.points = [ ];
+            this.planes = [];
+            this.maxRadius = 0;
+            rotation.binding = this;
+        }
+        rotate(rotation) {
+            this.rotation.addTo(rotation);
+            rotation = rotation.inverse();
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i] = this.points[i].rotate(rotation);
+            }
+            for (let i = 0; i < this.planes.length; i++) {
+                this.planes[i][this.planes[i].length - 1] = this.planes[i][this.planes[i].length - 1].rotate(rotation).norm();
             }
             return this;
         }
-        del() {
-            if (this.scene && this.index > -1) {
-                this.scene.del(this.index);
-                this.index = -1;
+        scale(s) {
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i] = this.points[i].mul_(s);
             }
-        }
-        move(d) {
-            let tmp = new Vector(this.position);
-            tmp.push(1);
-            let res = tmp * See3D.Matrix.TransMove(d);
-            this.position = new Vector3(res.get(0), res.get(1), res.get(2));
-            // console.log(this.position);
+            this.changeMaxRadius();
             return this;
         }
-        rotate(r) {
-            this.rotation = new Vector3(this.rotation.get(0) - r.get(0), this.rotation.get(1) - r.get(1), this.rotation.get(2) - r.get(2));
-            return this;
+        changeMaxRadius() {
+            let max = 0;
+            for (let i = 0; i < this.points.length; i++) {
+                let m2 = this.points[i].mod2();
+                if (m2 > max) max = m2;
+            }
+            this.maxRadius = Math.sqrt(max);
         }
-        left(d) {
-            let r = this.rotation;
-            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
-            let pos = new Vector4(d, 0, 0);
-            let p = pos * rotation;
-            this.position.x -= p.x;
-            this.position.y += p.y;
-            this.position.z += p.z;
-            return this;
-        }
-        right(d) {
-            return this.left(-d);
-        }
-        forward(d) {
-            let r = this.rotation;
-            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
-            let pos = new Vector4(0, 0, d);
-            let p = pos * rotation;
+        forward(step) {
+            let p = (new See3D.Math3D.Point3D(0, 0, step)).rotate(this.rotation.inverse());
             this.position.x -= p.x;
             this.position.y -= p.y;
             this.position.z += p.z;
             return this;
         }
-        back(d) {
-            return this.forward(-d);
-        }
-    }
-    Item.updateFunList = [];
-
-    class Scene extends See3D.LibraryDefineObject {
-        constructor(name, game) {
-            super("Scene");
-            this.game = game;
-            this.items = [];
-            this.cameras = {};
-            this.use = null;
-            this.__name = name;
-        }
-        get name() {
-            return this.__name;
-        }
-        push(item) {
-            item.scene = this;
-            if (item.type == "Camera") {
-                let c = item;
-                this.cameras[c.name] = c;
-                if (!this.use) this.use = c;
-            } else {
-                item.index = this.items.length;
-                this.items.push(item);
-            }
+        left(step) {
+            let p = (new See3D.Math3D.Point3D(step, 0, 0)).rotate(this.rotation.inverse());
+            this.position.x -= p.x;
+            this.position.y -= p.y;
+            this.position.z += p.z;
             return this;
         }
-        del(index) {
-            this.items.splice(index, 1);
-            return this;
+        right(step) {
+            return this.left(-step);
         }
-        get ctx() {
-            return this.game.ctx;
-        }
-        get dom() {
-            return this.game.dom;
-        }
-        camera(cn) {
-            this.use = this.cameras[cn];
-            return this;
-        }
-        render() {
-            if (this.use) {
-                this.use.render();
-            } else {
-                this.noView();
-            }
-            return this;
-        }
-        noView() {
-            this.game.noView();
-            return this;
+        back(step) {
+            return this.forward(-step);
         }
     }
     class Camera extends Item {
-        constructor(p, name, scene) {
-            super(p);
-            this.type = "Camera";
-            this.scene = scene;
-            this.__name = name;
-            this.d = 0;
-            this.__projType = Camera.PRESPECTIVE_PROJECTION;
-        }
-        get projType() {
-            return this.__projType;
-        }
-        set projType(n) {
-            if (typeof n != "number") {
-                console.log("Error 201: Illegal camera projection type value: '" + n + "'");
-                return null;
-            }
-            this.__projType = n;
-            return n;
+        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
+            super(position, rotation);
+            this.scene = null;
         }
         render() {
-            // console.log("a");
+            let { ctx, alpha, beta, width, height } = this;
+            let ta = Math.tan(alpha / 2);
+            let tb = Math.tan(beta / 2);
+            let maxLen = Math.max(width, height);
             let items = this.scene.items;
-            let ctx = this.scene.ctx;
-            let {width: sw, height: sh} = this.scene.dom;
-            let {FOV_x, FOV_y} = See3D;
-            let itemPoints = [];
-            let move = See3D.Matrix.TransMoveInverse(this.position);
-            let rotate = See3D.Matrix.TransRotate(new See3D.Vector3(
-                -this.rotation.x, -this.rotation.y, -this.rotation.z
-            ));
-            let trans = move * rotate;
-            let d = Math.max(
-                sw / 100 / (2 * Math.tan(FOV_x / 2)),
-                sh / 100 / (2 * Math.tan(FOV_y / 2))
-            );
-            this.d = d;
-            let near_d = 0.1;
-            let far_d = 1000;
-            items.sort(function (x, y) {
-                let a = x.position, b = y.position;
-                let ar = a.x * a.x + a.y * a.y + a.z * a.z;
-                let br = b.x * b.x + b.y * b.y + b.z * b.z;
-                if (ar > br) return 1;
-                if (ar < br) return -1;
-                return 0;
-            });
-            let projType = this.projType;
-            // console.log(d);
-            // console.log("update");
             for (let i = 0; i < items.length; i++) {
-                items[i].update();
-                if (items[i].type == "Point") {
-                    let p = new See3D.Vector3(items[i].position);
-                    p.array.push(1);
-                    itemPoints.push(p * trans);
-                } else {
-                    itemPoints.push([[], [],
-                        (new See3D.Vector4(items[i].position.x, items[i].position.y, items[i].position.z, 1) * trans)
-                    ]);
-                    // console.log(items[i].points);
-                    for (let j = 0; j < items[i].points.length; j++) {
-                        let p = items[i].points[j] + items[i].position;
-                        p.array.push(1);
-                        itemPoints[itemPoints.length - 1][0].push(p * trans);
-                    }
-                    for (let j = 0; j < items[i].planes.length; j++) {
-                        let p = items[i].planes[j].p0 + items[i].position;
-                        p.array.push(1);
-                        p = p * trans;
-                        itemPoints[itemPoints.length - 1][1].push(new See3D.Plane3D(
-                            new Vector3(p.array), new Vector3(p.array)
-                        ));
-                    }
-                    // console.log(itemPoints[itemPoints.length - 1]);
-                }
-                // if (items[i].type == "Cube")
-                //     console.log(p * trans);
-            }
-            this.update();
-            // console.log(itemPoints);
-            for (let i = 0; i < itemPoints.length; i++) {
-                // console.log(itemPoints[i].get(2));
-                // console.log(itemPoints[i]);
                 let item = items[i];
+                let points = item.points;
+                let planes = item.planes;
+                let itemCamPos = this.transToCameraPosition(See3D.Math3D.Point3D.Zero(), item.position);
+                if (itemCamPos.z + item.maxRadius <= 0 || itemCamPos.z + item.maxRadius > 1000) continue;// 近裁面和远裁面的判断
+                if (itemCamPos.z < Math.tan(Math.PI / 2 - alpha / 2) * Math.abs(itemCamPos.x + ((itemCamPos.x > 0 ? -1 : 1) * item.maxRadius))) continue;
+                // console.log(Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.z + item.maxRadius * 2));
+                if (itemCamPos.z < Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.y + ((itemCamPos.y > 0 ? -1 : 1) * item.maxRadius))) continue;
+                let transedPoints = { };
+                let transedPlanes = [ ];
                 if (item.type == "Point") {
-                    if (itemPoints[i].z < near_d || itemPoints[i].z > far_d) continue;// 超出远近裁面
-                    if (
-                        itemPoints[i].x > Math.tan(See3D.FOV_x / 2) * itemPoints[i].z
-                    ) continue;// 超出视景体右边缘
-                    if (
-                        itemPoints[i].x < -Math.tan(See3D.FOV_x / 2) * itemPoints[i].z
-                    ) continue;// 超出视景体左边缘
-                    if (
-                        itemPoints[i].y > Math.tan(See3D.FOV_y / 2) * itemPoints[i].z
-                    ) continue;// 超出视景体上边缘
-                    if (
-                        itemPoints[i].y < -Math.tan(See3D.FOV_y / 2) * itemPoints[i].z
-                    ) continue;// 超出视景体下边缘
-                    // console.log("a");
-                    let screenPos;
-                    if (projType == Camera.PRESPECTIVE_PROJECTION) {
-                        screenPos = new See3D.Vector2(// 透视投影
-                            itemPoints[i].get(0) * d / itemPoints[i].get(2) * 100,
-                            -itemPoints[i].get(1) * d / itemPoints[i].get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                        );
-                    } else if (projType == Camera.ORTHOGONAL_PROJECTION) {
-                        screenPos = new See3D.Vector2(
-                            itemPoints[i].get(0) * 100,
-                            -itemPoints[i].get(1) * 100,
-                        );
-                    } else {
-                        console.log("Error 201: Illegal camera projection type value: '" + n + "'");
-                        return;
-                    }
+                    let point3d = this.transToCameraPosition(points[0], item.position);
                     ctx.beginPath();
-                    ctx.arc(screenPos.x, screenPos.y, item.r, 0, Math.PI * 2);
-                    ctx.fillStyle = items[i].color;
+                    ctx.arc(...point3d.mappingTo(ta, tb, maxLen), 1, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#fff";
                     ctx.fill();
                     ctx.closePath();
-                } else {
-                    let r = Camera.r(item);
-                    if (itemPoints[i][2].z - r > far_d) continue;// 超过远裁面
-                    if (itemPoints[i][2].z + r < near_d) continue;// 小于近裁面
-                    if (itemPoints[i][2].z < 0) continue;
-                    if (
-                        itemPoints[i][2].x - r > Math.tan(See3D.FOV_x / 2) * itemPoints[i][2].z
-                    ) continue;// 超出视景体右边缘
-                    if (
-                        itemPoints[i][2].x + r < -Math.tan(See3D.FOV_x / 2) * itemPoints[i][2].z
-                    ) continue;// 超出视景体左边缘
-                    if (
-                        itemPoints[i][2].y - r > Math.tan(See3D.FOV_y / 2) * itemPoints[i][2].z
-                    ) continue;// 超出视景体上边缘
-                    if (
-                        itemPoints[i][2].y + r < -Math.tan(See3D.FOV_y / 2) * itemPoints[i][2].z
-                    ) continue;// 超出视景体下边缘
-                    for (let j = 0; j < items[i].planes.length; j++) {
-                        // if (new See3D.Vector3(0, 1, 0) % items[i].planes[j].n > 0) continue;
-                        function crop(pre, now) {
-                        }
-                        ctx.beginPath();
-                        let sx, sy;
-                        let per = new Vector3(items[i].planes[j].points[items[i].planes[j].points.length - 1]);
-                        // console.log("========");
-                        for (let k = 0; k < items[i].planes[j].points.length; k++) {
-                            let point = new Vector3(itemPoints[i][0][items[i].planes[j].points[k]]);
-                            if (point.z < near_d) {// 超出近裁面
-
-                            }
-                            if (point.z > far_d) {// 超出远裁面
-                            }
-                            if (
-                                point.x > Math.tan(See3D.FOV_x / 2) * point.z// 超出视景体右边缘
-                            ) {
-
-                            }
-                            if (
-                                point.x < -Math.tan(See3D.FOV_x / 2) * point.z// 超出视景体左边缘
-                            ) {
-
-                            }
-                            if (
-                                point.y > Math.tan(See3D.FOV_y / 2) * point.z// 超出视景体上边缘
-                            ) {
-
-                            }
-                            if (
-                                point.y < -Math.tan(See3D.FOV_y / 2) * point.z// 超出视景体下边缘
-                            ) {
-
-                            }
-                            let screenPos;
-                            if (projType == Camera.PRESPECTIVE_PROJECTION) {
-                                screenPos = new See3D.Vector2(// 透视投影
-                                    point.get(0) * d / point.get(2) * 100,
-                                    -point.get(1) * d / point.get(2) * 100,// 因为在canvas上向下y坐标增加，和数学上相反，所以需要取反操作
-                                );
-                            } else if (projType == Camera.ORTHOGONAL_PROJECTION) {
-                                screenPos = new See3D.Vector2(
-                                    point.get(0) * 100,
-                                    -point.get(1) * 100,
-                                );
-                                // console.log(screenPos);
-                            } else {
-                                console.log("Error 201: Illegal camera projection type value: '" + n + "'");
-                                return;
-                            }
-                            if (k == 0) {
-                                ctx.moveTo(screenPos.x, screenPos.y);
-                                sx = screenPos.x;
-                                sy = screenPos.y;
-                            } else {
-                                ctx.lineTo(screenPos.x, screenPos.y);
-                            }
-                            per = new See3D.Vector3(point);
-                        }
-                        ctx.lineTo(sx, sy);
-                        ctx.strokeStyle = items[i].color;
-                        // ctx.fillStyle = items[i].color;
-                        ctx.stroke();
-                        // ctx.fill();
-                        ctx.closePath();
+                    continue;
+                } else if (item.type == "Line") {
+                    ctx.beginPath();
+                    ctx.moveTo(...this.transToCameraPosition(points[0], item.position).mappingTo(ta, tb, maxLen));
+                    ctx.lineTo(...this.transToCameraPosition(points[1], item.position).mappingTo(ta, tb, maxLen));
+                    ctx.strokeStyle = "#fff";
+                    ctx.stroke();
+                    ctx.closePath();
+                    continue;
+                }
+                // for (let j = 0; j < points.length; j++) {
+                //     transedPoints.push(this.transToCameraPosition(points[j], item.position));
+                // }
+                let getPoint = function (i) {
+                    try {
+                        if (transedPoints[i]) return transedPoints[i];
+                        return transedPoints[i] = this.transToCameraPosition(points[i], item.position);
+                    } catch (e) {
+                        console.error(e);
+                        debugger;
                     }
+                }.bind(this);
+                for (let j = 0, c = 0; j < planes.length; j++) {
+                    let plane = planes[j];
+                    if (plane[plane.length - 1].rotate(this.rotation.inverse()).mul(getPoint(plane[0]).inverse().norm()) < 0) {
+                        continue;
+                    }
+                    transedPlanes.push([]);
+                    for (let k = 0; k < plane.length - 1; k++) {
+                        // console.log(transedPlanes[j], j);
+                        transedPlanes[c].push(getPoint(plane[k]));
+                    }
+                    c++;
+                }
+                for (let j = 0; j < transedPlanes.length; j++) {
+                    ctx.beginPath();
+                    let tmppos = transedPlanes[j][0].mappingTo(ta, tb, maxLen);
+                    ctx.moveTo(...tmppos);
+                    for (let k = 1; k < transedPlanes[j].length; k++) {
+                        ctx.lineTo(...transedPlanes[j][k].mappingTo(ta, tb, maxLen));
+                    }
+                    ctx.lineTo(...tmppos);
+                    ctx.strokeStyle = "#fff";
+                    // ctx.fillStyle = "#fff";
+                    ctx.stroke();
+                    // ctx.fill();
+                    ctx.closePath();
                 }
             }
             return this;
         }
-        revolution(r) {
-            let rotation = See3D.Matrix.TransRotate(new Vector3(r.get(0), r.get(1), r.get(2)));
-            let test = new Vector3(this.position);
-            test.push(1);
-            test = test * rotation;
-            this.position.x = test.x;
-            this.position.y = test.y;
-            this.position.z = test.z;
-            return this;
+        transToCameraPosition(point, itemWorldPoint) {
+            return point.add(itemWorldPoint).sub(this.position).rotate(this.rotation.inverse());
         }
-        static r(item) {
-            let l = 0;
-            for (let i = 0; i < item.points.length; i++) {
-                let tmp = (item.points[i].x * item.points[i].x + item.points[i].y * item.points[i].y + item.points[i].z * item.points[i].z);
-                if (l < tmp) {
-                    l = tmp;
-                }
-            }
-            l = Math.sqrt(l);
-            return l;
+        get ctx() { return this.scene.ctx; }
+        get alpha() { return this.scene.alpha; }
+        get beta() { return this.scene.beta; }
+        get width() { return this.scene.width; }
+        get height() { return this.scene.height; }
+    }
+    class Point extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
+            super(position, rotation);
+            this.type = "Point";
+            this.points = [
+                See3D.Math3D.Point3D.Zero()
+            ];
+            this.maxRadius = 0;
         }
-        get name() {
-            return this.__name;
+        changeMaxRadius() { }
+    }
+    class Line extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), start, end) {
+            super(position, new See3D.Math3D.Point3D());
+            this.type = "Line";
+            this.points = [
+                start.copy(), end.copy()
+            ];
+            this.maxRadius = start.sub(end).mod();
+        }
+        changeMaxRadius() {
+            this.maxRadius = start.sub(end).mod();
         }
     }
-    Camera.PRESPECTIVE_PROJECTION = 0;
-    Camera.ORTHOGONAL_PROJECTION = 1;
-
-    let ITEM_CONFIG = {
-        "Cube": {
-            "Points": [
-                [1, 1, 1],
-                [1, 1, -1],
-                [1, -1, 1],
-                [1, -1, -1],
-                [-1, 1, 1],
-                [-1, 1, -1],
-                [-1, -1, 1],
-                [-1, -1, -1],
-            ],
-            "Planes": [
-                {
-                    "n": [1, 0, 0],
-                    "p0": [1, 0, 0],
-                    "points": [0, 2, 3, 1]
-                },
-                {
-                    "n": [-1, 0, 0],
-                    "p0": [-1, 0, 0],
-                    "points": [4, 6, 7, 5]
-                },
-                {
-                    "n": [0, 1, 0],
-                    "p0": [0, 1, 0],
-                    "points": [4, 6, 2, 0]
-                },
-                {
-                    "n": [0, -1, 0],
-                    "p0": [0, -1, 0],
-                    "points": [5, 1, 3, 7]
-                },
-                {
-                    "n": [0, 0, 1],
-                    "p0": [0, 0, 1],
-                    "points": [2, 0, 1, 3]
-                },
-                {
-                    "n": [0, 0, -1],
-                    "p0": [0, 0, -1],
-                    "points": [4, 6, 7, 5]
-                },
-            ]
+    class Cube extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), {
+            w = 5, h = 5, d = 5
+        } = { }) {
+            super(position, See3D.Math3D.Point3D.Zero());
+            this.type = "Cube";
+            this.points = [
+                new See3D.Math3D.Point3D(w, h, d),
+                new See3D.Math3D.Point3D(w, h, -d),
+                new See3D.Math3D.Point3D(w, -h, d),
+                new See3D.Math3D.Point3D(w, -h, -d),
+                new See3D.Math3D.Point3D(-w, h, d),
+                new See3D.Math3D.Point3D(-w, h, -d),
+                new See3D.Math3D.Point3D(-w, -h, d),
+                new See3D.Math3D.Point3D(-w, -h, -d),
+            ];
+            // up: 0, 1, 4, 5
+            this.planes = [
+                [ 1, 2, 3, new Point3D(1, 0, 0) ],
+                [ 0, 1, 2, new Point3D(1, 0, 0) ],
+                [ 5, 6, 7, new Point3D(-1, 0, 0) ],
+                [ 4, 5, 6, new Point3D(-1, 0, 0) ],
+                [ 3, 6, 7, new Point3D(0, -1, 0) ],
+                [ 2, 3, 6, new Point3D(0, -1, 0) ],
+                [ 1, 4, 5, new Point3D(0, 1, 0) ],
+                [ 0, 1, 4, new Point3D(0, 1, 0) ],
+                [ 2, 4, 6, new Point3D(0, 0, 1) ],
+                [ 0, 2, 4, new Point3D(0, 0, 1) ],
+                [ 3, 5, 7, new Point3D(0, 0, -1) ],
+                [ 1, 3, 5, new Point3D(0, 0, -1) ],
+            ];
+            this.maxRadius = Math.sqrt(w ** 2 + h ** 2 + d ** 2);
         }
-    };
-    // console.log(ITEM_CONFIG["Cube"]);
-
-    class entity extends Item {
-        constructor(type, p, s, color, name, withItemConfig = true) {
-            super(p);
-            this.type = type;
+    }
+    class Pyramid extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), {
+            pointCount, radius, height
+        } = { }) {
+            super(position, See3D.Math3D.Point3D.Zero());
+            this.type = "Pyramid";
+            this.points = [ new See3D.Math3D.Point3D(0, height / 2, 0) ];
             this.planes = [];
-            this.points = [];
-            this.name = name;
-            this.s = s;
-            this.color = color;
-            if (withItemConfig) {
-                this.load();
+            this.maxRadius = Math.max(radius, height);
+            let delta_theta = Math.PI * 2 / pointCount;
+            let plane_bottom = [];
+            let i = 1, theta = 0;
+            for (; i <= pointCount; i++, theta += delta_theta) {
+                this.points.push(new See3D.Math3D.Point3D(radius * Math.sin(theta), -height / 2, radius * Math.cos(theta)));
+                plane_bottom.push(i);
+                this.planes.push([ i === 1 ? pointCount : i - 1, i, 0, (new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.sin(Math.PI / 2 - Math.atan(radius / height)), Math.cos(theta - delta_theta / 2))).norm() ]);
+                // if (i > 0) this.planes.push([ i, i + 1, 0, new See3D.Math3D.Point3D(0, 0, 0) ]);
             }
-        }
-        load() {
-            let config = ITEM_CONFIG[this.type];
-            if (!config) {
-                console.error(new Error("Error 200: Configuration of the entity was not found.\nEnity type: " + this.type));
-                return this;
-            }
-            // console.log(ITEM_CONFIG, this.type);
-            for (let i = 0; i < config["Points"].length; i++) {
-                let test = new See3D.Vector3(...Array(...config["Points"][i]));
-                test.x *= this.s.x;
-                test.y *= this.s.y;
-                test.z *= this.s.z;
-                this.points.push(test);
-            }
-            // console.log(config);
-            for (let i = 0; i < config["Planes"].length; i++) {
-                let arrN = Array(...config["Planes"][i]["n"]);
-                let arrP0 = Array(...config["Planes"][i]["p0"]);
-                // console.log(arrN);
-                arrN[0] *= this.s.x;
-                arrN[1] *= this.s.y;
-                arrN[2] *= this.s.z;
-                arrP0[0] *= this.s.x;
-                arrP0[1] *= this.s.y;
-                arrP0[2] *= this.s.z;
-                this.planes.push(new See3D.Plane3D(
-                    new Vector3(...arrN),
-                    new Vector3(...arrP0),
-                ));
-                this.planes[this.planes.length - 1].points = Array(...config["Planes"][i]["points"]);
-            }
-            // console.log(this);
-            return this;
-        }
-        rotate(r) {
-            // console.log(r);
-            this.rotation = new Vector3(this.rotation.get(0) + r.get(0), this.rotation.get(1) + r.get(1), this.rotation.get(2) + r.get(2));
-            let rotation = See3D.Matrix.TransRotate(new Vector3(-r.get(0), -r.get(1), -r.get(2)));
-            // console.log(-r.get(0), -r.get(1), -r.get(2));
-            // console.log(rotation);
-            for (let i = 0; i < this.points.length; i++) {
-                this.points[i].push(1);
-                this.points[i] = this.points[i] * rotation;
-                this.points[i].array.pop();
-                this.points[i] = new Vector3(...this.points[i].array);
-            }
-            for (let i = 0; i < this.planes.length; i++) {
-                this.planes[i].p0.push(1);
-                this.planes[i].p0 = this.planes[i].p0 * rotation;
-                this.planes[i].p0.array.pop();
-                this.planes[i].p0 = new Vector3(...this.planes[i].p0.array);
-                this.planes[i].n = new Vector3(this.planes[i].p0);
-            }
-            return this;
-        }
-        translate(s) {
-            let t = new Vector3(-s.x, -s.y, -s.z);
-            for (let i = 0; i < this.points.length; i++) {
-                this.points[i] = this.points[i] + t;
-            }
-        }
-        scale(s) {
-            for (let i = 0; i < this.points.length; i++) {
-                this.points[i].x *= s.x;
-                this.points[i].y *= s.y;
-                this.points[i].z *= s.z;
-            }
+            // this.planes.push([ i + 1, 1, 0, (new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.sin(Math.PI / 2 - Math.atan(radius / height)), Math.cos(theta - delta_theta / 2))).norm() ]);
+            plane_bottom.push(new See3D.Math3D.Point3D(0, -1, 0));
+            this.planes.push(plane_bottom);
         }
     }
-
-    class Point extends entity {
-        constructor(p = See3D.Vector3.Zero(), size = 10, color = "#fff", name = "") {
-            super("Point", p, null, color, name, false);
-            this.r = size;
+    class Platform extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), {
+            pointCount, radius1, radius2, height
+        } = { }) {
+            super(position, See3D.Math3D.Point3D.Zero());
+            this.type = "Platform";
+            this.points = [  ];
+            this.planes = [];
+            this.maxRadius = Math.max(radius1, radius2, height);
+            let delta_theta = Math.PI * 2 / pointCount;
+            let plane_bottom = [], plane_top = [];
+            let i = 0, theta = 0;
+            for (; i < pointCount; i++, theta += delta_theta) {
+                this.points.push(new See3D.Math3D.Point3D(radius1 * Math.sin(theta), -height / 2, radius1 * Math.cos(theta)));
+                plane_bottom.push(i);
+            }
+            for (theta = 0; i < pointCount << 1; i++, theta += delta_theta) {
+                this.points.push(new See3D.Math3D.Point3D(radius2 * Math.sin(theta), height / 2, radius2 * Math.cos(theta)));
+                plane_top.push(i);
+                this.planes.push([ i, i === pointCount ? (pointCount << 1) - 1 : i - 1, i === pointCount ? pointCount - 1 : i - pointCount - 1, i === pointCount ? 0 : i - pointCount, (new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.cos(Math.PI / 2 - Math.atan((radius1 - radius2) / height)), Math.cos(theta - delta_theta / 2))).norm() ]);
+            }
+            plane_top.push(new See3D.Math3D.Point3D(0, 1, 0));
+            plane_bottom.push(new See3D.Math3D.Point3D(0, -1, 0));
+            this.planes.push(plane_top);
+            this.planes.push(plane_bottom);
         }
     }
-    class Cube extends entity {
-        constructor(p = See3D.Vector3.Zero(), s = new See3D.Vector3(1, 1, 1), color = "#fff", name = "") {
-            s.x = (s.x == 0 ? s.x : s.x / 2);
-            s.y = (s.y == 0 ? s.y : s.y / 2);
-            s.z = (s.z == 0 ? s.z : s.z / 2);
-            super("Cube", p, s, color, name);
-            // console.log(this);
+    class Prism extends Platform {
+        constructor(position = See3D.Math3D.Point3D.Zero(), {
+            pointCount, radius, height
+        } = { }) {
+            super(position, {
+                pointCount: pointCount,
+                radius1: radius,
+                radius2: radius,
+                height: height
+            });
+            this.type = "Prism";
         }
     }
-
-    lib.define("Item", Item);// virtual
 
     lib.define("Scene", Scene);
-    lib.define("Camera", Camera);// renderer
-
-    lib.define("entity", entity);// virtual
-
-    lib.define("ITEM_CONFIG", ITEM_CONFIG);
+    lib.define("Item", Item);
+    lib.define("Camera", Camera);
     lib.define("Point", Point);
+    lib.define("Line", Line);
     lib.define("Cube", Cube);
+    lib.define("Pyramid", Pyramid);
+    lib.define("Platform", Platform);
+    lib.define("Prism", Prism);
 
-    lib.trans();
-    See3D.library(lib);
-    See3D.load("View");
-    if (See3D.DEBUG) {
-        See3D.loadGlobal("View");// 将库加入浏览器全局
-        lib.global();// 将库API加入浏览器全局
-    }
-    See3D.lib("View");
     lib.toSee3D();
+    lib.global();
 }(See3D);
