@@ -55,6 +55,9 @@
         mul_(v) {
             return new Point3D(this.x * v.x, this.y * v.y, this.z * v.z);
         }
+        mul_Real(v) {
+            return new Point3D(this.x * v, this.y * v, this.z * v);
+        }
         mod() {
             return Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
         }
@@ -82,6 +85,9 @@
             return [w * this.x / (2 * this.z * ta), -w * this.y / (2 * this.z * tb)];
             // return [this.x * 10, this.y * 10];
         }
+        eq(a) {
+            return this.x == a.x && this.y == a.y && this.z == a.z;
+        }
         copy() { return new Point3D(this.x, this.y, this.z); }
         rotate(s) {
             const SSX = Math.sin(s.x);
@@ -100,10 +106,36 @@
             return new Point3D();
         }
     }
+    class Parmline3D {
+        constructor(v0, v1) {
+            this.p0 = v0.copy();
+            this.p1 = v1.copy();
+            this.v = v1.sub(v0);
+            this.v_ = this.v.norm();
+        }
+    }
+
+    /** todo 平面类 */
+    class Plane3D {
+        constructor(n, d) {
+            this.n = n.copy();// 法线向量
+            this.p = d;
+        }
+    }
+    function intersParmlinePlane(parmline, plane) {
+        // console.log(parmline);
+        let { p0, v_ } = parmline;
+        let { p, n }  = plane;
+        let d = p.sub(p0).mul(n) / v_.mul(n);
+        return v_.mul_Real(d).add(p0);
+    }
 
 
     lib.define("Point2D", Point2D);
     lib.define("Point3D", Point3D);
+    lib.define("Plane3D", Plane3D);
+    lib.define("Parmline3D", Parmline3D);
+    lib.define("intersParmlinePlane", intersParmlinePlane);
 
     lib.toSee3D();
     lib.global();// 将库API加入浏览器全局

@@ -99,8 +99,9 @@
         }
     }
     class Camera extends Item {
-        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
+        constructor(position, rotation) {
             super(position, rotation);
+            this.type = "Camera";
             this.scene = null;
         }
         render() {
@@ -108,13 +109,16 @@
             let ta = Math.tan(alpha / 2);
             let tb = Math.tan(beta / 2);
             let maxLen = Math.max(width, height);
+            const NEAR_Z = 0.1, FAR_Z = 1000;
+            let screenPlane = new See3D.Math3D.Plane3D(new See3D.Math3D.Point3D(0, 0, 1), new See3D.Math3D.Point3D(0, 0, NEAR_Z));
+            // console.log(NEAR_Z);
             let items = this.scene.items;
             for (let i = 0; i < items.length; i++) {
                 let item = items[i];
                 let points = item.points;
                 let planes = item.planes;
                 let itemCamPos = this.transToCameraPosition(See3D.Math3D.Point3D.Zero(), item.position);
-                if (itemCamPos.z + item.maxRadius <= 0 || itemCamPos.z + item.maxRadius > 1000) continue;// 近裁面和远裁面的判断
+                if (itemCamPos.z + item.maxRadius <= NEAR_Z || itemCamPos.z + item.maxRadius > 1000) continue;// 近裁面和远裁面的判断
                 if (itemCamPos.z < Math.tan(Math.PI / 2 - alpha / 2) * Math.abs(itemCamPos.x + ((itemCamPos.x > 0 ? -1 : 1) * item.maxRadius))) continue;
                 // console.log(Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.z + item.maxRadius * 2));
                 if (itemCamPos.z < Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.y + ((itemCamPos.y > 0 ? -1 : 1) * item.maxRadius))) continue;
@@ -163,10 +167,41 @@
                 }
                 for (let j = 0; j < transedPlanes.length; j++) {
                     ctx.beginPath();
-                    let tmppos = transedPlanes[j][0].mappingTo(ta, tb, maxLen);
+                    let prePoint = transedPlanes[j][0];
+                    let needRenderAgain = false;
+                    let start = 1;
+                    if (prePoint.z < NEAR_Z) {
+                        needRenderAgain = true;
+                        prePoint = transedPlanes[j][1];
+                        start = 2;
+                        while (prePoint.z < NEAR_Z)
+                            prePoint = transedPlanes[j][start++];
+                    }
+                    let tmppos = prePoint.mappingTo(ta, tb, maxLen);
+                    let count = transedPlanes[j].length;
                     ctx.moveTo(...tmppos);
-                    for (let k = 1; k < transedPlanes[j].length; k++) {
-                        ctx.lineTo(...transedPlanes[j][k].mappingTo(ta, tb, maxLen));
+                    for (let k = start; k < count || (needRenderAgain && !(k = 0) && !(needRenderAgain = false)); k++) {
+                        // if (k == transedPlanes[j].length) {
+                        //     count = start;
+                        //     k = 0;
+                        // }
+                        let cpoint = transedPlanes[j][k];
+                        let raw = cpoint;
+                        if (prePoint.z < NEAR_Z) {
+                            if (cpoint.z < NEAR_Z) {
+                                prePoint = cpoint;
+                                continue;
+                            }
+                            let parmline = new See3D.Math3D.Parmline3D(prePoint, cpoint);
+                            prePoint = See3D.Math3D.intersParmlinePlane(parmline, screenPlane);
+                            ctx.moveTo(...prePoint.mappingTo(ta, tb, maxLen));
+                        }
+                        if (cpoint.z < NEAR_Z) {
+                            let parmline = new See3D.Math3D.Parmline3D(prePoint, cpoint);
+                            cpoint = See3D.Math3D.intersParmlinePlane(parmline, screenPlane);
+                        }
+                        ctx.lineTo(...cpoint.mappingTo(ta, tb, maxLen));
+                        prePoint = raw;
                     }
                     ctx.lineTo(...tmppos);
                     ctx.strokeStyle = "#fff";
@@ -186,6 +221,22 @@
         get beta() { return this.scene.beta; }
         get width() { return this.scene.width; }
         get height() { return this.scene.height; }
+    }
+    class BaseCamera extends Camera {
+        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
+            super(position, rotation);
+        }
+    }
+    class FreeCamera extends BaseCamera {
+        constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point2D()) {
+            super(position);
+            this.$rotation = rotation;
+        }
+        updateRotation() {
+            this.rotation.y = this.$rotation.x;
+            this.rotation.x = Math.PI / 2 - this.$rotation.y;
+            this.rotation.z = this.$rotation.y;
+        }
     }
     class Point extends Item {
         constructor(position = See3D.Math3D.Point3D.Zero(), rotation = new See3D.Math3D.Point3D()) {
@@ -311,7 +362,8 @@
 
     lib.define("Scene", Scene);
     lib.define("Item", Item);
-    lib.define("Camera", Camera);
+    lib.define("BaseCamera", BaseCamera);
+    lib.define("FreeCamera", FreeCamera);
     lib.define("Point", Point);
     lib.define("Line", Line);
     lib.define("Cube", Cube);

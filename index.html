@@ -31,46 +31,28 @@
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.View.Scene();
-    let camera = new See3D.View.Camera(new Point3D(0, 0, 0));
-    let prism = new See3D.View.Prism(new Point3D(0, 5, 10), { pointCount: 5, radius: 3, height: 3 });
-    let platform = new See3D.View.Platform(new Point3D(0, 0, 10), { pointCount: 5, radius1: 3, radius2: 1, height: 3 });
-    let pyramid = new See3D.View.Pyramid(new Point3D(0, -5, 10), { pointCount: 5, radius: 3, height: 3 });
-    let point = new See3D.View.Point(new Point3D(5, 5, 10));
-    let add = 1;
-    let upper = 1;
+    let camera = new See3D.View.FreeCamera(new Point3D(-12, 0, -3));
+    let cube = new See3D.View.Cube(new See3D.Math3D.Point3D(0, 0, 5), { w: 5, h: 5, d: 5 });
+    cube.rotate(new See3D.Math3D.Point3D(Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.25));
     game.width(window.innerWidth).height(window.innerHeight);
     game.scene(scene);
     scene.camera(camera);
-    scene.push(platform);
-    scene.push(pyramid);
-    scene.push(prism);
-    scene.push(point);
     window.onresize = () => {
         game.width(window.innerWidth).height(window.innerHeight);
     };
-    // game.render();
-    let scaler = 1.01;
+    scene.push(cube);
+    // let radius = 2;
+    // for (let x = -radius; x <= radius; x += 0.2) {
+    //     for (let y = -radius; y <= radius; y += 0.2) {
+    //         let z2 = radius * radius - x * x - y * y;
+    //         if (z2 < 0) continue;
+    //         console.log(x, y, Math.sqrt(z2));
+            // scene.push(new See3D.View.Cube(new See3D.Math3D.Point3D(x, y, Math.sqrt(z2)), { w: 0.1, h: 0.1, d: 0.1 }));
+            // scene.push(new See3D.View.Cube(new See3D.Math3D.Point3D(x, y, -Math.sqrt(z2)), { w: 0.1, h: 0.1, d: 0.1 }));
+        // }
+    // }
     game.showFPS = true;
-    pyramid.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
-    platform.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
-    prism.moveOrigin(new See3D.Math3D.Point3D(1, 1, 1));
-    // game.clear = false;
     game.whileRender(function () {
-        if (point.position.x > 10 || point.position.x < -10) { add = -add; upper *= -1; }
-        point.position.x += add * 0.1;
-        point.position.y = upper * Math.sqrt(100 - point.position.x ** 2);
-        platform.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
-        pyramid.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
-        prism.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
-        platform.rotate(new See3D.Math3D.Point3D(Math.PI / 180 / 10, Math.PI / 180, Math.PI / 180 / 2));
-        pyramid.scale(new See3D.Math3D.Point3D(scaler, scaler, scaler));
-        platform.scale(new See3D.Math3D.Point3D(scaler, scaler, scaler));
-        prism.scale(new See3D.Math3D.Point3D(scaler, scaler, scaler));
-        if (platform.maxRadius > 2) {
-            scaler = 0.99;
-        } else if (platform.maxRadius < 1) {
-            scaler = 1.01;
-        }
     });
     window.onkeydown = (e) => {
         // console.log(e.keyCode);
