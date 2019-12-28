@@ -31,26 +31,35 @@
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.View.Scene();
-    let camera = new See3D.View.FreeCamera(new Point3D(-12, 0, -3));
-    let cube = new See3D.View.Cube(new See3D.Math3D.Point3D(0, 0, 5), { w: 5, h: 5, d: 5 });
-    cube.rotate(new See3D.Math3D.Point3D(Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.25));
+    let camera = new See3D.View.FreeCamera(new Point3D(0, 5, -10));
+    let cloth = new See3D.View.Cloth(new See3D.Math3D.Point3D(0, 0, 5), { w: 15, h: 15, acc: 1 });
+    // let cube = new See3D.View.Cube(new See3D.Math3D.Point3D(0, 0, 5), { w: 15, h: 0.1, d: 15 });
+    // cube.rotate(new See3D.Math3D.Point3D(Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.25));
     game.width(window.innerWidth).height(window.innerHeight);
     game.scene(scene);
     scene.camera(camera);
     window.onresize = () => {
         game.width(window.innerWidth).height(window.innerHeight);
     };
-    scene.push(cube);
+    scene.push(cloth);
+    // scene.push(cube);
     // let radius = 2;
-    // for (let x = -radius; x <= radius; x += 0.2) {
-    //     for (let y = -radius; y <= radius; y += 0.2) {
+    // let updateR = 0.05;
+    // for (let x = -radius; x <= radius; x += updateR) {
+    //     for (let y = -radius; y <= radius; y += updateR) {
     //         let z2 = radius * radius - x * x - y * y;
     //         if (z2 < 0) continue;
+    //         updateR -= 0.0001;
     //         console.log(x, y, Math.sqrt(z2));
             // scene.push(new See3D.View.Cube(new See3D.Math3D.Point3D(x, y, Math.sqrt(z2)), { w: 0.1, h: 0.1, d: 0.1 }));
             // scene.push(new See3D.View.Cube(new See3D.Math3D.Point3D(x, y, -Math.sqrt(z2)), { w: 0.1, h: 0.1, d: 0.1 }));
         // }
     // }
+    // camera.rotation.x = -Math.PI / 2;
+    // cloth.maxRadius = 0;
+    // cloth.select(0, 0, (p) => {
+    //     p.y += 10;
+    // });
     game.showFPS = true;
     game.whileRender(function () {
     });

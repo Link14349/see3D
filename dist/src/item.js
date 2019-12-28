@@ -10,79 +10,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _Op = function () {
-    'bpo disable';
-
-    return {
-        add: function add(a, b) {
-            if (a.operatorAdd) return a.operatorAdd(b);else return a + b;
-        },
-        selfAdd: function selfAdd(a, b) {
-            if (a.operatorSelfAdd) return a.operatorSelfAdd(b);else return a += b;
-        },
-        sub: function sub(a, b) {
-            if (a.operatorSub) return a.operatorSub(b);else return a - b;
-        },
-        selfSub: function selfSub(a, b) {
-            if (a.operatorSelfSub) return a.operatorSelfSub(b);else return a -= b;
-        },
-        mul: function mul(a, b) {
-            if (a.operatorMul) return a.operatorMul(b);else return a * b;
-        },
-        selfMul: function selfMul(a, b) {
-            if (a.operatorSelfMul) return a.operatorSelfMul(b);else return a *= b;
-        },
-        div: function div(a, b) {
-            if (a.operatorDiv) return a.operatorDiv(b);else return a / b;
-        },
-        selfDiv: function selfDiv(a, b) {
-            if (a.operatorSelfDiv) return a.operatorSelfDiv(b);else return a /= b;
-        },
-        mod: function mod(a, b) {
-            if (a.operatorMod) return a.operatorMod(b);else return a % b;
-        },
-        selfMod: function selfMod(a, b) {
-            if (a.operatorSelfMod) return a.operatorSelfMod(b);else return a %= b;
-        },
-        pow: function pow(a, b) {
-            if (a.operatorPow) return a.operatorPow(b);else return Math.pow(a, b);
-        },
-        binaryAnd: function binaryAnd(a, b) {
-            if (a.operatorBinaryAnd) return a.operatorBinaryAnd(b);else return a & b;
-        },
-        binaryOr: function binaryOr(a, b) {
-            if (a.operatorBinaryOr) return a.operatorBinaryOr(b);else return a | b;
-        },
-        binaryXor: function binaryXor(a, b) {
-            if (a.operatorBinaryXor) return a.operatorBinaryXor(b);else return a ^ b;
-        },
-        binaryLShift: function binaryLShift(a, b) {
-            if (a.operatorBinaryLShift) return a.operatorBinaryLShift(b);else return a << b;
-        },
-        binaryRShift: function binaryRShift(a, b) {
-            if (a.operatorBinaryRShift) return a.operatorBinaryRShift(b);else return a >> b;
-        },
-        less: function less(a, b) {
-            if (a.operatorLess) return a.operatorLess(b);else if (b.operatorGreater) return b.operatorGreater(a);else if (a.operatorGreaterEqual) return !a.operatorGreaterEqual(b);else return a < b;
-        },
-        greater: function greater(a, b) {
-            if (a.operatorGreater) return a.operatorGreater(b);else if (b.operatorLess) return b.operatorLess(a);else if (a.operatorLessEqual) return !a.operatorLessEqual(b);else return a > b;
-        },
-        lessEqual: function lessEqual(a, b) {
-            if (a.operatorLessEqual) return a.operatorLessEqual(b);else if (b.operatorGreaterEqual) return b.operatorGreaterEqual(a);else if (a.operatorGreater) return !a.operatorGreater(b);else return a <= b;
-        },
-        greaterEqual: function greaterEqual(a, b) {
-            if (a.operatorGreaterEqual) return a.operatorGreaterEqual(b);else if (b.operatorLessEqual) return b.operatorLessEqual(a);else if (a.operatorLess) return !a.operatorLess(b);else return a >= b;
-        },
-        equal: function equal(a, b) {
-            if (a.operatorEqual) return a.operatorEqual(b);else if (a.operatorNotEqual) return !a.operatorNotEqual(b);else if (b.operatorEqual) return b.operatorEqual(a);else if (b.operatorNotEqual) return !b.operatorNotEqual(a);else return a == b;
-        },
-        notEqual: function notEqual(a, b) {
-            if (a.operatorNotEqual) return a.operatorNotEqual(b);else if (a.operatorEqual) return !a.operatorEqual(b);else if (b.operatorNotEqual) return b.operatorNotEqual(a);else if (b.operatorEqual) return !b.operatorEqual(a);else return a != b;
-        }
-    };
-}();
-
 !function (See3D) {
     var lib = new See3D.Library("View");
 
@@ -192,6 +119,14 @@ var _Op = function () {
                 this.maxRadius = Math.sqrt(max);
             }
         }, {
+            key: "moveOrigin",
+            value: function moveOrigin(s) {
+                for (var i = 0; i < this.points.length; i++) {
+                    this.points[i].subTo(s);
+                }
+                return this;
+            }
+        }, {
             key: "forward",
             value: function forward(step) {
                 var p = new See3D.Math3D.Point3D(0, 0, step).rotate(this.rotation.inverse());
@@ -210,6 +145,15 @@ var _Op = function () {
                 return this;
             }
         }, {
+            key: "up",
+            value: function up(step) {
+                var p = new See3D.Math3D.Point3D(0, step, 0).rotate(this.rotation.inverse());
+                this.position.x -= p.x;
+                this.position.y -= p.y;
+                this.position.z += p.z;
+                return this;
+            }
+        }, {
             key: "right",
             value: function right(step) {
                 return this.left(-step);
@@ -219,6 +163,11 @@ var _Op = function () {
             value: function back(step) {
                 return this.forward(-step);
             }
+        }, {
+            key: "down",
+            value: function down(step) {
+                return this.up(-step);
+            }
         }]);
 
         return Item;
@@ -227,14 +176,12 @@ var _Op = function () {
     var Camera = function (_Item) {
         _inherits(Camera, _Item);
 
-        function Camera() {
-            var position = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : See3D.Math3D.Point3D.Zero();
-            var rotation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new See3D.Math3D.Point3D();
-
+        function Camera(position, rotation) {
             _classCallCheck(this, Camera);
 
             var _this = _possibleConstructorReturn(this, (Camera.__proto__ || Object.getPrototypeOf(Camera)).call(this, position, rotation));
 
+            _this.type = "Camera";
             _this.scene = null;
             return _this;
         }
@@ -253,6 +200,10 @@ var _Op = function () {
                 var ta = Math.tan(alpha / 2);
                 var tb = Math.tan(beta / 2);
                 var maxLen = Math.max(width, height);
+                var NEAR_Z = 0.1,
+                    FAR_Z = 1000;
+                var screenPlane = new See3D.Math3D.Plane3D(new See3D.Math3D.Point3D(0, 0, 1), new See3D.Math3D.Point3D(0, 0, NEAR_Z));
+                // console.log(NEAR_Z);
                 var items = this.scene.items;
 
                 var _loop = function _loop(i) {
@@ -260,10 +211,10 @@ var _Op = function () {
                     var points = item.points;
                     var planes = item.planes;
                     var itemCamPos = _this2.transToCameraPosition(See3D.Math3D.Point3D.Zero(), item.position);
-                    if (itemCamPos.z + item.maxRadius <= 0 || itemCamPos.z + item.maxRadius > 1000) return "continue"; // 近裁面和远裁面的判断
-                    if (itemCamPos.z < Math.tan(Math.PI / 2 - alpha / 2) * Math.abs(itemCamPos.x + (itemCamPos.x > 0 ? -1 : 1) * item.maxRadius)) return "continue";
+                    if (itemCamPos.z + item.maxRadius <= NEAR_Z || itemCamPos.z + item.maxRadius > FAR_Z) return "continue"; // 近裁面和远裁面的判断
+                    if (Math.abs(itemCamPos.x) - item.maxRadius > itemCamPos.z / Math.tan(Math.PI / 2 - beta / 2)) return "continue";
                     // console.log(Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.z + item.maxRadius * 2));
-                    if (itemCamPos.z < Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.y + (itemCamPos.y > 0 ? -1 : 1) * item.maxRadius)) return "continue";
+                    if (Math.abs(itemCamPos.y) - item.maxRadius > itemCamPos.z / Math.tan(Math.PI / 2 - beta / 2)) return "continue";
                     var transedPoints = {};
                     var transedPlanes = [];
                     if (item.type == "Point") {
@@ -307,16 +258,50 @@ var _Op = function () {
                         }
                         c++;
                     }
+                    // let colorIndex = 0;
+                    // let colors = ["#fff", "#f00", "#0f0", "#00f", "#ff0", "#0ff", "#f0f"];
                     for (var _j = 0; _j < transedPlanes.length; _j++) {
                         ctx.beginPath();
-                        var tmppos = transedPlanes[_j][0].mappingTo(ta, tb, maxLen);
+                        var prePoint = transedPlanes[_j][0];
+                        var needRenderAgain = false;
+                        var _start = 1;
+                        if (prePoint.z < NEAR_Z) {
+                            needRenderAgain = true;
+                            prePoint = transedPlanes[_j][1];
+                            _start = 2;
+                            while (prePoint && prePoint.z < NEAR_Z) {
+                                prePoint = transedPlanes[_j][_start++];
+                            }if (!prePoint) continue;
+                        }
+                        var tmppos = prePoint.mappingTo(ta, tb, maxLen);
+                        var count = transedPlanes[_j].length;
                         ctx.moveTo.apply(ctx, _toConsumableArray(tmppos));
-                        for (var _k = 1; _k < transedPlanes[_j].length; _k++) {
-                            ctx.lineTo.apply(ctx, _toConsumableArray(transedPlanes[_j][_k].mappingTo(ta, tb, maxLen)));
+                        for (var _k = _start; _k < count || needRenderAgain && !(_k = 0) && !(needRenderAgain = false) && (count = _start); _k++) {
+                            // if (k == transedPlanes[j].length) {
+                            //     count = start;
+                            //     k = 0;
+                            // }
+                            var cpoint = transedPlanes[_j][_k];
+                            var raw = cpoint;
+                            if (prePoint.z < NEAR_Z) {
+                                if (cpoint.z < NEAR_Z) {
+                                    prePoint = cpoint;
+                                    continue;
+                                }
+                                var parmline = new See3D.Math3D.Parmline3D(prePoint, cpoint);
+                                prePoint = See3D.Math3D.intersParmlinePlane(parmline, screenPlane);
+                                ctx.moveTo.apply(ctx, _toConsumableArray(prePoint.mappingTo(ta, tb, maxLen)));
+                            }
+                            if (cpoint.z < NEAR_Z) {
+                                var _parmline = new See3D.Math3D.Parmline3D(prePoint, cpoint);
+                                cpoint = See3D.Math3D.intersParmlinePlane(_parmline, screenPlane);
+                            }
+                            ctx.lineTo.apply(ctx, _toConsumableArray(cpoint.mappingTo(ta, tb, maxLen)));
+                            prePoint = raw;
                         }
                         ctx.lineTo.apply(ctx, _toConsumableArray(tmppos));
                         ctx.strokeStyle = "#fff";
-                        // ctx.fillStyle = "#fff";
+                        // ctx.fillStyle = colors[(colorIndex >= colors.length && (colorIndex = 0)) || colorIndex++];
                         ctx.stroke();
                         // ctx.fill();
                         ctx.closePath();
@@ -365,6 +350,48 @@ var _Op = function () {
         return Camera;
     }(Item);
 
+    var BaseCamera = function (_Camera) {
+        _inherits(BaseCamera, _Camera);
+
+        function BaseCamera() {
+            var position = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : See3D.Math3D.Point3D.Zero();
+            var rotation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new See3D.Math3D.Point3D();
+
+            _classCallCheck(this, BaseCamera);
+
+            return _possibleConstructorReturn(this, (BaseCamera.__proto__ || Object.getPrototypeOf(BaseCamera)).call(this, position, rotation));
+        }
+
+        return BaseCamera;
+    }(Camera);
+
+    var FreeCamera = function (_BaseCamera) {
+        _inherits(FreeCamera, _BaseCamera);
+
+        function FreeCamera() {
+            var position = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : See3D.Math3D.Point3D.Zero();
+            var rotation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new See3D.Math3D.Point2D();
+
+            _classCallCheck(this, FreeCamera);
+
+            var _this4 = _possibleConstructorReturn(this, (FreeCamera.__proto__ || Object.getPrototypeOf(FreeCamera)).call(this, position));
+
+            _this4.$rotation = rotation;
+            return _this4;
+        }
+
+        _createClass(FreeCamera, [{
+            key: "updateRotation",
+            value: function updateRotation() {
+                this.rotation.y = this.$rotation.x;
+                this.rotation.x = Math.PI / 2 - this.$rotation.y;
+                this.rotation.z = this.$rotation.y;
+            }
+        }]);
+
+        return FreeCamera;
+    }(BaseCamera);
+
     var Point = function (_Item2) {
         _inherits(Point, _Item2);
 
@@ -374,12 +401,12 @@ var _Op = function () {
 
             _classCallCheck(this, Point);
 
-            var _this3 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, position, rotation));
+            var _this5 = _possibleConstructorReturn(this, (Point.__proto__ || Object.getPrototypeOf(Point)).call(this, position, rotation));
 
-            _this3.type = "Point";
-            _this3.points = [See3D.Math3D.Point3D.Zero()];
-            _this3.maxRadius = 0;
-            return _this3;
+            _this5.type = "Point";
+            _this5.points = [See3D.Math3D.Point3D.Zero()];
+            _this5.maxRadius = 0;
+            return _this5;
         }
 
         _createClass(Point, [{
@@ -400,12 +427,12 @@ var _Op = function () {
 
             _classCallCheck(this, Line);
 
-            var _this4 = _possibleConstructorReturn(this, (Line.__proto__ || Object.getPrototypeOf(Line)).call(this, position, new See3D.Math3D.Point3D()));
+            var _this6 = _possibleConstructorReturn(this, (Line.__proto__ || Object.getPrototypeOf(Line)).call(this, position, new See3D.Math3D.Point3D()));
 
-            _this4.type = "Line";
-            _this4.points = [start.copy(), end.copy()];
-            _this4.maxRadius = start.sub(end).mod();
-            return _this4;
+            _this6.type = "Line";
+            _this6.points = [start.copy(), end.copy()];
+            _this6.maxRadius = start.sub(end).mod();
+            return _this6;
         }
 
         _createClass(Line, [{
@@ -434,14 +461,14 @@ var _Op = function () {
 
             _classCallCheck(this, Cube);
 
-            var _this5 = _possibleConstructorReturn(this, (Cube.__proto__ || Object.getPrototypeOf(Cube)).call(this, position, See3D.Math3D.Point3D.Zero()));
+            var _this7 = _possibleConstructorReturn(this, (Cube.__proto__ || Object.getPrototypeOf(Cube)).call(this, position, See3D.Math3D.Point3D.Zero()));
 
-            _this5.type = "Cube";
-            _this5.points = [new See3D.Math3D.Point3D(w, h, d), new See3D.Math3D.Point3D(w, h, -d), new See3D.Math3D.Point3D(w, -h, d), new See3D.Math3D.Point3D(w, -h, -d), new See3D.Math3D.Point3D(-w, h, d), new See3D.Math3D.Point3D(-w, h, -d), new See3D.Math3D.Point3D(-w, -h, d), new See3D.Math3D.Point3D(-w, -h, -d)];
+            _this7.type = "Cube";
+            _this7.points = [new See3D.Math3D.Point3D(w, h, d), new See3D.Math3D.Point3D(w, h, -d), new See3D.Math3D.Point3D(w, -h, d), new See3D.Math3D.Point3D(w, -h, -d), new See3D.Math3D.Point3D(-w, h, d), new See3D.Math3D.Point3D(-w, h, -d), new See3D.Math3D.Point3D(-w, -h, d), new See3D.Math3D.Point3D(-w, -h, -d)];
             // up: 0, 1, 4, 5
-            _this5.planes = [[1, 2, 3, new Point3D(1, 0, 0)], [0, 1, 2, new Point3D(1, 0, 0)], [5, 6, 7, new Point3D(-1, 0, 0)], [4, 5, 6, new Point3D(-1, 0, 0)], [3, 6, 7, new Point3D(0, -1, 0)], [2, 3, 6, new Point3D(0, -1, 0)], [1, 4, 5, new Point3D(0, 1, 0)], [0, 1, 4, new Point3D(0, 1, 0)], [2, 4, 6, new Point3D(0, 0, 1)], [0, 2, 4, new Point3D(0, 0, 1)], [3, 5, 7, new Point3D(0, 0, -1)], [1, 3, 5, new Point3D(0, 0, -1)]];
-            _this5.maxRadius = Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2) + Math.pow(d, 2));
-            return _this5;
+            _this7.planes = [[1, 2, 3, new Point3D(1, 0, 0)], [0, 1, 2, new Point3D(1, 0, 0)], [5, 6, 7, new Point3D(-1, 0, 0)], [4, 5, 6, new Point3D(-1, 0, 0)], [3, 6, 7, new Point3D(0, -1, 0)], [2, 3, 6, new Point3D(0, -1, 0)], [1, 4, 5, new Point3D(0, 1, 0)], [0, 1, 4, new Point3D(0, 1, 0)], [2, 4, 6, new Point3D(0, 0, 1)], [0, 2, 4, new Point3D(0, 0, 1)], [3, 5, 7, new Point3D(0, 0, -1)], [1, 3, 5, new Point3D(0, 0, -1)]];
+            _this7.maxRadius = Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2) + Math.pow(d, 2));
+            return _this7;
         }
 
         return Cube;
@@ -460,26 +487,26 @@ var _Op = function () {
 
             _classCallCheck(this, Pyramid);
 
-            var _this6 = _possibleConstructorReturn(this, (Pyramid.__proto__ || Object.getPrototypeOf(Pyramid)).call(this, position, See3D.Math3D.Point3D.Zero()));
+            var _this8 = _possibleConstructorReturn(this, (Pyramid.__proto__ || Object.getPrototypeOf(Pyramid)).call(this, position, See3D.Math3D.Point3D.Zero()));
 
-            _this6.type = "Pyramid";
-            _this6.points = [new See3D.Math3D.Point3D(0, height / 2, 0)];
-            _this6.planes = [];
-            _this6.maxRadius = Math.max(radius, height);
+            _this8.type = "Pyramid";
+            _this8.points = [new See3D.Math3D.Point3D(0, height / 2, 0)];
+            _this8.planes = [];
+            _this8.maxRadius = Math.max(radius, height);
             var delta_theta = Math.PI * 2 / pointCount;
             var plane_bottom = [];
             var i = 1,
                 theta = 0;
             for (; i <= pointCount; i++, theta += delta_theta) {
-                _this6.points.push(new See3D.Math3D.Point3D(radius * Math.sin(theta), -height / 2, radius * Math.cos(theta)));
+                _this8.points.push(new See3D.Math3D.Point3D(radius * Math.sin(theta), -height / 2, radius * Math.cos(theta)));
                 plane_bottom.push(i);
-                _this6.planes.push([i === 1 ? pointCount : i - 1, i, 0, new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.sin(Math.PI / 2 - Math.atan(radius / height)), Math.cos(theta - delta_theta / 2)).norm()]);
+                _this8.planes.push([i === 1 ? pointCount : i - 1, i, 0, new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.sin(Math.PI / 2 - Math.atan(radius / height)), Math.cos(theta - delta_theta / 2)).norm()]);
                 // if (i > 0) this.planes.push([ i, i + 1, 0, new See3D.Math3D.Point3D(0, 0, 0) ]);
             }
             // this.planes.push([ i + 1, 1, 0, (new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.sin(Math.PI / 2 - Math.atan(radius / height)), Math.cos(theta - delta_theta / 2))).norm() ]);
             plane_bottom.push(new See3D.Math3D.Point3D(0, -1, 0));
-            _this6.planes.push(plane_bottom);
-            return _this6;
+            _this8.planes.push(plane_bottom);
+            return _this8;
         }
 
         return Pyramid;
@@ -499,31 +526,31 @@ var _Op = function () {
 
             _classCallCheck(this, Platform);
 
-            var _this7 = _possibleConstructorReturn(this, (Platform.__proto__ || Object.getPrototypeOf(Platform)).call(this, position, See3D.Math3D.Point3D.Zero()));
+            var _this9 = _possibleConstructorReturn(this, (Platform.__proto__ || Object.getPrototypeOf(Platform)).call(this, position, See3D.Math3D.Point3D.Zero()));
 
-            _this7.type = "Platform";
-            _this7.points = [];
-            _this7.planes = [];
-            _this7.maxRadius = Math.max(radius1, radius2, height);
+            _this9.type = "Platform";
+            _this9.points = [];
+            _this9.planes = [];
+            _this9.maxRadius = Math.max(radius1, radius2, height);
             var delta_theta = Math.PI * 2 / pointCount;
             var plane_bottom = [],
                 plane_top = [];
             var i = 0,
                 theta = 0;
             for (; i < pointCount; i++, theta += delta_theta) {
-                _this7.points.push(new See3D.Math3D.Point3D(radius1 * Math.sin(theta), -height / 2, radius1 * Math.cos(theta)));
+                _this9.points.push(new See3D.Math3D.Point3D(radius1 * Math.sin(theta), -height / 2, radius1 * Math.cos(theta)));
                 plane_bottom.push(i);
             }
             for (theta = 0; i < pointCount << 1; i++, theta += delta_theta) {
-                _this7.points.push(new See3D.Math3D.Point3D(radius2 * Math.sin(theta), height / 2, radius2 * Math.cos(theta)));
+                _this9.points.push(new See3D.Math3D.Point3D(radius2 * Math.sin(theta), height / 2, radius2 * Math.cos(theta)));
                 plane_top.push(i);
-                _this7.planes.push([i, i === pointCount ? (pointCount << 1) - 1 : i - 1, i === pointCount ? pointCount - 1 : i - pointCount - 1, i === pointCount ? 0 : i - pointCount, new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.cos(Math.PI / 2 - Math.atan((radius1 - radius2) / height)), Math.cos(theta - delta_theta / 2)).norm()]);
+                _this9.planes.push([i, i === pointCount ? (pointCount << 1) - 1 : i - 1, i === pointCount ? pointCount - 1 : i - pointCount - 1, i === pointCount ? 0 : i - pointCount, new See3D.Math3D.Point3D(Math.sin(theta - delta_theta / 2), Math.cos(Math.PI / 2 - Math.atan((radius1 - radius2) / height)), Math.cos(theta - delta_theta / 2)).norm()]);
             }
             plane_top.push(new See3D.Math3D.Point3D(0, 1, 0));
             plane_bottom.push(new See3D.Math3D.Point3D(0, -1, 0));
-            _this7.planes.push(plane_top);
-            _this7.planes.push(plane_bottom);
-            return _this7;
+            _this9.planes.push(plane_top);
+            _this9.planes.push(plane_bottom);
+            return _this9;
         }
 
         return Platform;
@@ -542,29 +569,88 @@ var _Op = function () {
 
             _classCallCheck(this, Prism);
 
-            var _this8 = _possibleConstructorReturn(this, (Prism.__proto__ || Object.getPrototypeOf(Prism)).call(this, position, {
+            var _this10 = _possibleConstructorReturn(this, (Prism.__proto__ || Object.getPrototypeOf(Prism)).call(this, position, {
                 pointCount: pointCount,
                 radius1: radius,
                 radius2: radius,
                 height: height
             }));
 
-            _this8.type = "Prism";
-            return _this8;
+            _this10.type = "Prism";
+            return _this10;
         }
 
         return Prism;
     }(Platform);
 
+    var Cloth = function (_Item7) {
+        _inherits(Cloth, _Item7);
+
+        function Cloth() {
+            var position = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : See3D.Math3D.Point3D.Zero();
+
+            var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                w = _ref5.w,
+                h = _ref5.h,
+                _ref5$acc = _ref5.acc,
+                acc = _ref5$acc === undefined ? 1 : _ref5$acc;
+
+            _classCallCheck(this, Cloth);
+
+            var _this11 = _possibleConstructorReturn(this, (Cloth.__proto__ || Object.getPrototypeOf(Cloth)).call(this, position, See3D.Math3D.Point3D.Zero()));
+
+            _this11.type = "Cloth";
+            _this11.points = [];
+            _this11.planes = [];
+            _this11.w = w;
+            _this11.h = h;
+            _this11.acc = acc;
+            _this11.acc = acc;
+            var wC = w / acc,
+                hC = h / acc;
+            for (var _i2 = 0; _i2 < wC; _i2++) {
+                for (var j = 0; j < hC; j++) {
+                    _this11.points.push(new Point3D(_i2 * acc - w / 2, 0, j * acc - h / 2));
+                }
+            }
+            for (var _i3 = 0; _i3 < wC - 1; _i3++) {
+                for (var _j2 = 0; _j2 < hC - 1; _j2++) {
+                    _this11.planes.push([_this11.getIndex(_i3, _j2), _this11.getIndex(_i3 + 1, _j2), _this11.getIndex(_i3 + 1, _j2 + 1), new See3D.Math3D.Point3D(0, 0, 0)]);
+                    _this11.planes.push([_this11.getIndex(_i3, _j2), _this11.getIndex(_i3 + 1, _j2 + 1), _this11.getIndex(_i3, _j2 + 1), new See3D.Math3D.Point3D(0, 0, 0)]);
+                }
+            }
+            _this11.maxRadius = Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2));
+            return _this11;
+        }
+
+        _createClass(Cloth, [{
+            key: "getIndex",
+            value: function getIndex(x, y) {
+                return x * (this.h / this.acc) + y;
+            }
+        }, {
+            key: "select",
+            value: function select(x, y, cb) {
+                cb.call(this, this.points[this.getIndex(x, y)]);
+                this.changeMaxRadius();
+                return this;
+            }
+        }]);
+
+        return Cloth;
+    }(Item);
+
     lib.define("Scene", Scene);
     lib.define("Item", Item);
-    lib.define("Camera", Camera);
+    lib.define("BaseCamera", BaseCamera);
+    lib.define("FreeCamera", FreeCamera);
     lib.define("Point", Point);
     lib.define("Line", Line);
     lib.define("Cube", Cube);
     lib.define("Pyramid", Pyramid);
     lib.define("Platform", Platform);
     lib.define("Prism", Prism);
+    lib.define("Cloth", Cloth);
 
     lib.toSee3D();
     lib.global();

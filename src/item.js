@@ -118,10 +118,12 @@
                 let points = item.points;
                 let planes = item.planes;
                 let itemCamPos = this.transToCameraPosition(See3D.Math3D.Point3D.Zero(), item.position);
-                if (itemCamPos.z + item.maxRadius <= NEAR_Z || itemCamPos.z + item.maxRadius > 1000) continue;// 近裁面和远裁面的判断
-                if (itemCamPos.z < Math.tan(Math.PI / 2 - alpha / 2) * Math.abs(itemCamPos.x + ((itemCamPos.x > 0 ? -1 : 1) * item.maxRadius))) continue;
+                if (itemCamPos.z + item.maxRadius <= NEAR_Z || itemCamPos.z + item.maxRadius > FAR_Z) continue;// 近裁面和远裁面的判断
+                if (Math.abs(itemCamPos.x) - item.maxRadius > itemCamPos.z / Math.tan(Math.PI / 2 - beta / 2))
+                    continue;
                 // console.log(Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.z + item.maxRadius * 2));
-                if (itemCamPos.z < Math.tan(Math.PI / 2 - beta / 2) * Math.abs(itemCamPos.y + ((itemCamPos.y > 0 ? -1 : 1) * item.maxRadius))) continue;
+                if (Math.abs(itemCamPos.y) - item.maxRadius > itemCamPos.z / Math.tan(Math.PI / 2 - beta / 2))
+                    continue;
                 let transedPoints = { };
                 let transedPlanes = [ ];
                 if (item.type == "Point") {
@@ -165,6 +167,8 @@
                     }
                     c++;
                 }
+                // let colorIndex = 0;
+                // let colors = ["#fff", "#f00", "#0f0", "#00f", "#ff0", "#0ff", "#f0f"];
                 for (let j = 0; j < transedPlanes.length; j++) {
                     ctx.beginPath();
                     let prePoint = transedPlanes[j][0];
@@ -174,13 +178,14 @@
                         needRenderAgain = true;
                         prePoint = transedPlanes[j][1];
                         start = 2;
-                        while (prePoint.z < NEAR_Z)
+                        while (prePoint && prePoint.z < NEAR_Z)
                             prePoint = transedPlanes[j][start++];
+                        if (!prePoint) continue;
                     }
                     let tmppos = prePoint.mappingTo(ta, tb, maxLen);
                     let count = transedPlanes[j].length;
                     ctx.moveTo(...tmppos);
-                    for (let k = start; k < count || (needRenderAgain && !(k = 0) && !(needRenderAgain = false)); k++) {
+                    for (let k = start; k < count || (needRenderAgain && !(k = 0) && !(needRenderAgain = false) && (count = start)); k++) {
                         // if (k == transedPlanes[j].length) {
                         //     count = start;
                         //     k = 0;
@@ -205,7 +210,7 @@
                     }
                     ctx.lineTo(...tmppos);
                     ctx.strokeStyle = "#fff";
-                    // ctx.fillStyle = "#fff";
+                    // ctx.fillStyle = colors[(colorIndex >= colors.length && (colorIndex = 0)) || colorIndex++];
                     ctx.stroke();
                     // ctx.fill();
                     ctx.closePath();
@@ -326,7 +331,7 @@
             super(position, See3D.Math3D.Point3D.Zero());
             this.type = "Platform";
             this.points = [  ];
-            this.planes = [];
+            this.planes = [ ];
             this.maxRadius = Math.max(radius1, radius2, height);
             let delta_theta = Math.PI * 2 / pointCount;
             let plane_bottom = [], plane_top = [];
@@ -359,6 +364,41 @@
             this.type = "Prism";
         }
     }
+    class Cloth extends Item {
+        constructor(position = See3D.Math3D.Point3D.Zero(), {
+            w, h, acc = 1
+        } = { }) {
+            super(position, See3D.Math3D.Point3D.Zero());
+            this.type = "Cloth";
+            this.points = [ ];
+            this.planes = [ ];
+            this.w = w;
+            this.h = h;
+            this.acc = acc;
+            this.acc = acc;
+            let wC = w / acc, hC = h / acc;
+            for (let i = 0; i < wC; i++) {
+                for (let j = 0; j < hC; j++) {
+                    this.points.push(new Point3D(i * acc - w / 2, 0, j * acc - h / 2));
+                }
+            }
+            for (let i = 0; i < wC - 1; i++) {
+                for (let j = 0; j < hC - 1; j++) {
+                    this.planes.push([ this.getIndex(i, j), this.getIndex(i + 1, j), this.getIndex(i + 1, j + 1), new See3D.Math3D.Point3D(0, 0, 0) ]);
+                    this.planes.push([ this.getIndex(i, j), this.getIndex(i + 1, j + 1), this.getIndex(i, j + 1), new See3D.Math3D.Point3D(0, 0, 0) ]);
+                }
+            }
+            this.maxRadius = Math.sqrt(w ** 2 + h ** 2);
+        }
+        getIndex(x, y) {
+            return x * (this.h / this.acc) + y;
+        }
+        select(x, y, cb) {
+            cb.call(this, this.points[this.getIndex(x, y)]);
+            this.changeMaxRadius();
+            return this;
+        }
+    }
 
     lib.define("Scene", Scene);
     lib.define("Item", Item);
@@ -370,6 +410,7 @@
     lib.define("Pyramid", Pyramid);
     lib.define("Platform", Platform);
     lib.define("Prism", Prism);
+    lib.define("Cloth", Cloth);
 
     lib.toSee3D();
     lib.global();
