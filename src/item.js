@@ -391,13 +391,15 @@
             this.maxRadius = Math.sqrt(w ** 2 + h ** 2);
         }
         getIndex(x, y) {
-            return x * (this.h / this.acc) + y;
+            return x * parseInt(this.h / this.acc) + y;
         }
         select(x, y, cb) {
             cb.call(this, this.points[this.getIndex(x, y)]);
             this.changeMaxRadius();
             return this;
         }
+        get width() { return parseInt(this.w / this.acc); }
+        get height() { return parseInt(this.h / this.acc); }
     }
 
     lib.define("Scene", Scene);

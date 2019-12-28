@@ -31,8 +31,8 @@
 <script type="text/javascript">
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.View.Scene();
-    let camera = new See3D.View.FreeCamera(new Point3D(0, 5, -10));
-    let cloth = new See3D.View.Cloth(new See3D.Math3D.Point3D(0, 0, 5), { w: 15, h: 15, acc: 1 });
+    let camera = new See3D.View.FreeCamera(new Point3D(0, 5, -50));
+    let cloth = new See3D.View.Cloth(new See3D.Math3D.Point3D(0, 0, 5), { w: 100, h: 100, acc: 1 });
     // let cube = new See3D.View.Cube(new See3D.Math3D.Point3D(0, 0, 5), { w: 15, h: 0.1, d: 15 });
     // cube.rotate(new See3D.Math3D.Point3D(Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.25));
     game.width(window.innerWidth).height(window.innerHeight);
@@ -57,11 +57,22 @@
     // }
     // camera.rotation.x = -Math.PI / 2;
     // cloth.maxRadius = 0;
-    // cloth.select(0, 0, (p) => {
-    //     p.y += 10;
-    // });
     game.showFPS = true;
+    let n = -1;
+    let c = 0;
     game.whileRender(function () {
+        for (let i = 0; i < cloth.width; i++) {
+            for (let j = 0; j < cloth.height; j++) {
+                cloth.select(i, j, (p) => {
+                    p.y += n * Math.cos(c / 5 + (i + j) / 25) * 0.5;
+                });
+            }
+        }
+        c++;
+        if (c >= 30) {
+            c = 0;
+            n *= -1;
+        }
     });
     window.onkeydown = (e) => {
         // console.log(e.keyCode);
