@@ -104,6 +104,21 @@
             this.type = "Camera";
             this.scene = null;
         }
+        static getColor(y) {
+            if (y <= 0) return "#003472";
+            if (y <= 1) return "#065279";
+            if (y <= 2) return "#1685a9";
+            if (y <= 3) return "#70f3ff";
+            if (y <= 4) return "#7fecad";
+            if (y <= 5) return "#00e079";
+            if (y <= 6) return "#9ed900";
+            if (y <= 7) return "#a3d900";
+            if (y <= 8) return "#eaff56";
+            if (y <= 9) return "#faff72";
+            if (y <= 10) return "#fff143";
+            if (y <= 11) return "#ffa400";
+            return "#ff7500";
+        }
         render() {
             let { ctx, alpha, beta, width, height } = this;
             let ta = Math.tan(alpha / 2);
@@ -210,9 +225,9 @@
                     }
                     ctx.lineTo(...tmppos);
                     ctx.strokeStyle = "#fff";
-                    // ctx.fillStyle = colors[(colorIndex >= colors.length && (colorIndex = 0)) || colorIndex++];
+                    ctx.fillStyle = Camera.getColor(points[planes[j][0]].y);
                     ctx.stroke();
-                    // ctx.fill();
+                    ctx.fill();
                     ctx.closePath();
                 }
             }
@@ -376,16 +391,27 @@
             this.h = h;
             this.acc = acc;
             this.acc = acc;
+            this.indexs = [];
             let wC = w / acc, hC = h / acc;
             for (let i = 0; i < wC; i++) {
                 for (let j = 0; j < hC; j++) {
                     this.points.push(new Point3D(i * acc - w / 2, 0, j * acc - h / 2));
+                    this.indexs.push([ ]);
                 }
             }
-            for (let i = 0; i < wC - 1; i++) {
-                for (let j = 0; j < hC - 1; j++) {
-                    this.planes.push([ this.getIndex(i, j), this.getIndex(i + 1, j), this.getIndex(i + 1, j + 1), new See3D.Math3D.Point3D(0, 0, 0) ]);
-                    this.planes.push([ this.getIndex(i, j), this.getIndex(i + 1, j + 1), this.getIndex(i, j + 1), new See3D.Math3D.Point3D(0, 0, 0) ]);
+            let quadrants = [
+                [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ];
+            for (let i = 1; i < wC - 1; i++) {
+                for (let j = 1; j < hC - 1; j++) {
+                    for (let k = 0; k < 4; k++) {
+                        this.planes.push([ this.getIndex(i, j), this.getIndex(i + quadrants[k][0], j + quadrants[k][1]), this.getIndex(i + quadrants[k][0], j), new See3D.Math3D.Point3D(0, 1, 0) ]);
+                        this.planes.push([ this.getIndex(i, j), this.getIndex(i + quadrants[k][0], j + quadrants[k][1]), this.getIndex(i, j + quadrants[k][1]), new See3D.Math3D.Point3D(0, 1, 0) ]);
+                        this.indexs[this.getIndex(i, j)].push(this.planes.length - 1, this.planes.length - 2);
+                        this.indexs[this.getIndex(i + quadrants[k][0], j + quadrants[k][1])].push(this.planes.length - 1, this.planes.length - 2);
+                        this.indexs[this.getIndex(i + quadrants[k][0], j)].push(this.planes.length - 1, this.planes.length - 2);
+                        this.indexs[this.getIndex(i, j + quadrants[k][1])].push(this.planes.length - 1, this.planes.length - 2);
+                    }
                 }
             }
             this.maxRadius = Math.sqrt(w ** 2 + h ** 2);
@@ -394,9 +420,43 @@
             return x * parseInt(this.h / this.acc) + y;
         }
         select(x, y, cb) {
-            cb.call(this, this.points[this.getIndex(x, y)]);
+            let index;
+            if (arguments.length === 3) index = this.getIndex(x, y);
+            else {
+                index = x;
+                cb = y;
+            }
+            cb.call(this, this.points[index]);
             this.changeMaxRadius();
+            // let planes = this.indexs[index];
+            for (let i = 0; i < planes.length; i++) {
+                let plane = this.planes[planes[i]];
+                let {0: a, 1: b, 2: c} = plane;
+                a = this.points[a];
+                b = this.points[b];
+                c = this.points[c];
+                // plane[3] = new See3D.Math3D.Point3D((c.y - a.y)*(c.z - a.z) - (b.z -a.z)*(c.y - a.y));
+                plane[3] = new See3D.Math3D.Point3D(0, 0, 0);
+            }
             return this;
+        }
+        load(src, k = 1, d = 0) {
+            let map = new See3D.Pix.ImagePix("map.jpeg", this.height / this.acc, this.width / this.acc);
+            map.load().then(() => {
+                for (let i = 0; i < map.px.data.length; i += 4) {
+                    this.points[i / 4].y = map.px.data[i] * k + d;
+                }
+                this.changeMaxRadius();
+                let planes = this.planes;
+                for (let i = 0; i < planes.length; i++) {
+                    let plane = planes[i];
+                    let {0: a, 1: b, 2: c} = plane;
+                    a = this.points[a];
+                    b = this.points[b];
+                    c = this.points[c];
+                    plane[3] = new See3D.Math3D.Point3D((c.y - a.y)*(c.z - a.z) - (b.z -a.z)*(c.y - a.y));
+                }
+            });
         }
         get width() { return parseInt(this.w / this.acc); }
         get height() { return parseInt(this.h / this.acc); }

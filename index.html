@@ -7,6 +7,7 @@
     <script type="text/javascript" src="src/index.js"></script>
     <script type="text/javascript" src="src/math.js"></script>
     <script type="text/javascript" src="src/item.js"></script>
+    <script type="text/javascript" src="src/pix.js"></script>
     <style>
         * {
             padding: 0;
@@ -32,9 +33,10 @@
     let game = new See3D(document.getElementById("canvas"));
     let scene = new See3D.View.Scene();
     let camera = new See3D.View.FreeCamera(new Point3D(0, 5, -50));
-    let cloth = new See3D.View.Cloth(new See3D.Math3D.Point3D(0, 0, 5), { w: 100, h: 100, acc: 1 });
+    let cloth = new See3D.View.Cloth(new See3D.Math3D.Point3D(0, 0, 5), { w: 29, h: 58, acc: 1 });
     // let cube = new See3D.View.Cube(new See3D.Math3D.Point3D(0, 0, 5), { w: 15, h: 0.1, d: 15 });
     // cube.rotate(new See3D.Math3D.Point3D(Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.25));
+    cloth.rotate(new See3D.Math3D.Point3D(0, Math.PI * 0.5, 0));
     game.width(window.innerWidth).height(window.innerHeight);
     game.scene(scene);
     scene.camera(camera);
@@ -42,6 +44,7 @@
         game.width(window.innerWidth).height(window.innerHeight);
     };
     scene.push(cloth);
+    cloth.load("map.jpeg", 0.05);
     // scene.push(cube);
     // let radius = 2;
     // let updateR = 0.05;
@@ -57,25 +60,20 @@
     // }
     // camera.rotation.x = -Math.PI / 2;
     // cloth.maxRadius = 0;
+    let xS = 0, yS = 0;
+    let left = false, back = false;
     game.showFPS = true;
-    let n = -1;
-    let c = 0;
     game.whileRender(function () {
-        for (let i = 0; i < cloth.width; i++) {
-            for (let j = 0; j < cloth.height; j++) {
-                cloth.select(i, j, (p) => {
-                    p.y += n * Math.cos(c / 5 + (i + j) / 25) * 0.5;
-                });
-            }
-        }
-        c++;
-        if (c >= 30) {
-            c = 0;
-            n *= -1;
-        }
+        if (xS > 0) xS -= 0.025;
+        if (yS > 0) yS -= 0.025;
+        if (back) camera.back(yS);
+        else camera.forward(yS);
+        if (left) camera.left(xS);
+        else camera.right(xS);
     });
     window.onkeydown = (e) => {
         // console.log(e.keyCode);
+        left = back = false;
         switch (e.keyCode) {
             case 38:// up
                 camera.rotation.x += Math.PI / 90;
@@ -90,16 +88,26 @@
                 camera.rotation.y -= Math.PI / 90;
                 break;
             case 87:// w
-                camera.forward(1);
+                yS = 1;
+                camera.forward(yS);
+                if (yS < 10) yS += 0.05;
                 break;
             case 83:// s
-                camera.back(1);
+                back = true;
+                yS = 1;
+                camera.back(yS);
+                if (yS < 10) yS += 0.05;
                 break;
             case 65:// a
-                camera.left(1);
+                xS = 1;
+                camera.left(xS);
+                left = true;
+                if (xS < 10) xS += 0.05;
                 break;
             case 68:// d
-                camera.right(1);
+                xS = 1;
+                camera.right(xS);
+                if (xS < 10) xS += 0.05;
                 break;
         }
     };
